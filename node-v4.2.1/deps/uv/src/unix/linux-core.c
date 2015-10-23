@@ -139,6 +139,19 @@ void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
   }
 }
 
+extern void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
+extern void uv__poll_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
+extern void uv__stream_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
+extern void uv__signal_event(uv_loop_t* loop, uv__io_t* w, unsigned int events);
+extern void uv__inotify_read(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
+extern void uv__udp_io(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
+
+static void check_cb(uv__io_cb cb) {
+  if (cb == uv__async_io) {
+    return;
+  }
+}
+
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -354,6 +367,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         IQ_TOTAL += cb_inqueue;
         NEVENTS++;
         w->cb(loop, w, pe->events);
+        check_cb(w->cb);
         cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
         EX_TOTAL += cb_exec;
         if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9) {
