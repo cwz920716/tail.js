@@ -20,6 +20,7 @@
 
 #include "uv.h"
 #include "internal.h"
+#include "esample.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -145,11 +146,32 @@ extern void uv__stream_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 extern void uv__signal_event(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 extern void uv__inotify_read(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
 extern void uv__udp_io(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
+extern void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
 static void check_cb(uv__io_cb cb) {
   if (cb == uv__async_io) {
     return;
   }
+  if (cb == uv__poll_io) {
+    return;
+  }
+  if (cb == uv__stream_io) {
+    return;
+  }
+  if (cb == uv__signal_event) {
+    return;
+  }
+  if (cb == uv__inotify_read) {
+    return;
+  }
+  if (cb == uv__udp_io) {
+    return;
+  }
+  if (cb == uv__server_io) {
+    return;
+  }
+
+  printf("Error: Untracked uv__io_cb() %lx !\n", (uint64_t) cb);
 }
 
 
@@ -184,7 +206,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* Author: Wenzhi
    * Add some variable to profile the EVENT LOOP TIME 
    */
-  static uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_MAX = 0, IQ_TOTAL = 0, NEVENTS = 0, EX_TOTAL = 0;
+  static uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0;
 
   if (loop->nfds == 0) {
     assert(QUEUE_EMPTY(&loop->watcher_queue));
@@ -363,17 +385,20 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (pe->events != 0) {
         cb_prepare = uv__hrtime(UV_CLOCK_FAST);
         cb_inqueue = cb_prepare - cb_ready;
-        if (cb_inqueue > IQ_MAX) IQ_MAX = cb_inqueue;
-        IQ_TOTAL += cb_inqueue;
-        NEVENTS++;
+        /* if (cb_inqueue > IQ_MAX) IQ_MAX = cb_inqueue;
+           IQ_TOTAL += cb_inqueue;
+           NEVENTS++; */
         w->cb(loop, w, pe->events);
         check_cb(w->cb);
         cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
-        EX_TOTAL += cb_exec;
-        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9) {
-            printf("cb exec itme (ns): %lu, inqueue_max: %lu, inqueue_avg: %lu\n", EX_TOTAL / NEVENTS, IQ_MAX, IQ_TOTAL / NEVENTS);
-            EX_TOTAL = IQ_TOTAL = NEVENTS = IQ_MAX = 0;
+        /* EX_TOTAL += cb_exec; */
+        st_add_sample(cb_inqueue, cb_exec);
+        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 30) {
+            printf("----------\n");
+            st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
             cb_lastp = cb_prepare;
+            /* printf("cb exec itme (ns): %lu, inqueue_max: %lu, inqueue_avg: %lu\n", EX_TOTAL / NEVENTS, IQ_MAX, IQ_TOTAL / NEVENTS);
+               EX_TOTAL = IQ_TOTAL = NEVENTS = IQ_MAX = 0; */
         }
         nevents++;
       }
