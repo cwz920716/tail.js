@@ -148,6 +148,7 @@ extern void uv__inotify_read(uv_loop_t* loop, uv__io_t* w, unsigned int revents)
 extern void uv__udp_io(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
 extern void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
+uint64_t conns = 0, reqs = 0, resps = 0;
 static void check_cb(uv__io_cb cb) {
   if (cb == uv__async_io) {
     return;
@@ -393,10 +394,12 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
         /* EX_TOTAL += cb_exec; */
         st_add_sample(cb_inqueue, cb_exec);
-        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 30) {
+        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 60) {
             printf("----------\n");
             st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
+            printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
             cb_lastp = cb_prepare;
+            st_clean();
             /* printf("cb exec itme (ns): %lu, inqueue_max: %lu, inqueue_avg: %lu\n", EX_TOTAL / NEVENTS, IQ_MAX, IQ_TOTAL / NEVENTS);
                EX_TOTAL = IQ_TOTAL = NEVENTS = IQ_MAX = 0; */
         }

@@ -506,6 +506,8 @@ static int uv__emfile_trick(uv_loop_t* loop, int accept_fd) {
 # define UV_DEC_BACKLOG(w) /* no-op */
 #endif /* defined(UV_HAVE_KQUEUE) */
 
+/* extern counters */
+extern uint64_t conns, reqs, resps;
 
 void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   uv_stream_t* stream;
@@ -549,6 +551,7 @@ void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
 
     UV_DEC_BACKLOG(w)
     stream->accepted_fd = err;
+    conns++;
     stream->connection_cb(stream, 0);
 
     if (stream->accepted_fd != -1) {
@@ -1176,6 +1179,7 @@ static void uv__read(uv_stream_t* stream) {
           return;
         }
       }
+      reqs++;
       stream->read_cb(stream, nread, &buf);
 
       /* Return if we didn't fill the buffer, there is no more data to read. */
@@ -1334,6 +1338,8 @@ int uv_write2(uv_write_t* req,
               uv_stream_t* send_handle,
               uv_write_cb cb) {
   int empty_queue;
+
+  resps++;
 
   assert(nbufs > 0);
   assert((stream->type == UV_TCP ||

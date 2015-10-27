@@ -40,6 +40,8 @@ void st_add_sample(uint64_t iq, uint64_t ex);
 
 void st_dump(void);
 
+void st_clean(void);
+
 void st_get_percentile(uint64_t permile);
 
 #endif

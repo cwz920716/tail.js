@@ -93,6 +93,10 @@ void st_dump(void) {
   }
 }
 
+void st_clean(void) {
+  st_init();
+}
+
 void st_get_percentile(uint64_t permile) {
   uint64_t k = (uint64_t) (stp->n * (double) (permile) / 1000);
 
