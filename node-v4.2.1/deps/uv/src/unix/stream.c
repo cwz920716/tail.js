@@ -35,6 +35,11 @@
 #include <unistd.h>
 #include <limits.h> /* IOV_MAX */
 
+/* extern counters */
+extern uint64_t conns, reqs, resps;
+extern uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, total_IO, total_C;
+extern uint64_t event_id;
+
 #if defined(__APPLE__)
 # include <sys/event.h>
 # include <sys/time.h>
@@ -418,6 +423,12 @@ int uv__stream_open(uv_stream_t* stream, int fd, int flags) {
 
   stream->io_watcher.fd = fd;
 
+  stream->isClient = 0;
+  stream->ureq = 0;
+  stream->compute = 0;
+  stream->io = 0;
+  stream->pending = 0;
+
   return 0;
 }
 
@@ -506,9 +517,6 @@ static int uv__emfile_trick(uv_loop_t* loop, int accept_fd) {
 # define UV_DEC_BACKLOG(w) /* no-op */
 #endif /* defined(UV_HAVE_KQUEUE) */
 
-/* extern counters */
-extern uint64_t conns, reqs, resps;
-
 void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   uv_stream_t* stream;
   int err;
@@ -551,7 +559,6 @@ void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
 
     UV_DEC_BACKLOG(w)
     stream->accepted_fd = err;
-    conns++;
     stream->connection_cb(stream, 0);
 
     if (stream->accepted_fd != -1) {
@@ -587,6 +594,8 @@ int uv_accept(uv_stream_t* server, uv_stream_t* client) {
       err = uv__stream_open(client,
                             server->accepted_fd,
                             UV_STREAM_READABLE | UV_STREAM_WRITABLE);
+      client->isClient = 1;
+      conns++;
       if (err) {
         /* TODO handle error */
         uv__close(server->accepted_fd);
@@ -1179,7 +1188,17 @@ static void uv__read(uv_stream_t* stream) {
           return;
         }
       }
-      reqs++;
+      if (stream->isClient && !stream->pending) {
+        stream->pending = 1;
+        stream->ureq = stream->compute = stream->io = 0;
+        stream->ureq = cb_ready;
+        stream->compute += cb_inqueue;
+        stream->event = event_id;
+        /* printf("\nreq %ld buf.base: %s", reqs, buf.base); */
+        reqs++;
+      } else if (stream->isClient) {
+        printf("\nreq %ld from %p buf.base: %s\n", reqs, stream, buf.base);
+      }
       stream->read_cb(stream, nread, &buf);
 
       /* Return if we didn't fill the buffer, there is no more data to read. */
@@ -1339,7 +1358,18 @@ int uv_write2(uv_write_t* req,
               uv_write_cb cb) {
   int empty_queue;
 
-  resps++;
+  uint64_t it;
+  if (stream->isClient && stream->pending) {
+    if (event_id > stream->event)
+      stream->compute += cb_inqueue;
+    stream->io = (uv__hrtime(UV_CLOCK_FAST) - stream->ureq) - stream->compute;
+    total_IO += stream->io;
+    total_C += stream->compute;
+    stream->pending = 0; /*
+    for (it = 0; it < nbufs; it++)
+      printf("resps %ld to %p buf.base: %p, %ld\n", resps, stream, bufs[it].base, bufs[it].len); */
+    resps++;
+  }
 
   assert(nbufs > 0);
   assert((stream->type == UV_TCP ||

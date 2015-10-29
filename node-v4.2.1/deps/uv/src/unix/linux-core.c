@@ -149,32 +149,46 @@ extern void uv__udp_io(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
 extern void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
 uint64_t conns = 0, reqs = 0, resps = 0;
+uint64_t counter_per_type[7];
+
 static void check_cb(uv__io_cb cb) {
-  if (cb == uv__async_io) {
-    return;
-  }
-  if (cb == uv__poll_io) {
+  if (cb == uv__server_io) {
+    counter_per_type[0]++;
     return;
   }
   if (cb == uv__stream_io) {
+    counter_per_type[1]++;
+    return;
+  }
+  if (cb == uv__async_io) {
+    counter_per_type[2]++;
+    return;
+  }
+  if (cb == uv__poll_io) {
+    counter_per_type[3]++;
     return;
   }
   if (cb == uv__signal_event) {
+    counter_per_type[4]++;
     return;
   }
   if (cb == uv__inotify_read) {
+    counter_per_type[5]++;
     return;
   }
   if (cb == uv__udp_io) {
-    return;
-  }
-  if (cb == uv__server_io) {
+    counter_per_type[6]++;
     return;
   }
 
   printf("Error: Untracked uv__io_cb() %lx !\n", (uint64_t) cb);
 }
 
+/* Author: Wenzhi
+ * Add some variable to profile the EVENT LOOP TIME 
+ */
+uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
+uint64_t event_id = 0;
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -203,11 +217,6 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
   int fd;
   int op;
   int i;
-
-  /* Author: Wenzhi
-   * Add some variable to profile the EVENT LOOP TIME 
-   */
-  static uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0;
 
   if (loop->nfds == 0) {
     assert(QUEUE_EMPTY(&loop->watcher_queue));
@@ -386,22 +395,24 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (pe->events != 0) {
         cb_prepare = uv__hrtime(UV_CLOCK_FAST);
         cb_inqueue = cb_prepare - cb_ready;
-        /* if (cb_inqueue > IQ_MAX) IQ_MAX = cb_inqueue;
-           IQ_TOTAL += cb_inqueue;
-           NEVENTS++; */
+        IQ_TOTAL += cb_inqueue;
+        NEVENTS++;
+        event_id++;
         w->cb(loop, w, pe->events);
         check_cb(w->cb);
         cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
-        /* EX_TOTAL += cb_exec; */
+        EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
-        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 60) {
+        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 10) {
             printf("----------\n");
-            st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
+            /* st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999); */
             printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
             cb_lastp = cb_prepare;
             st_clean();
-            /* printf("cb exec itme (ns): %lu, inqueue_max: %lu, inqueue_avg: %lu\n", EX_TOTAL / NEVENTS, IQ_MAX, IQ_TOTAL / NEVENTS);
-               EX_TOTAL = IQ_TOTAL = NEVENTS = IQ_MAX = 0; */
+            printf("\n"); 
+            if (reqs != 0)
+                printf("cb exec_avg time (ns): %lu, inqueue_avg: %lu, io_avg: %lu, compute_avg: %lu, io: %lx\n", EX_TOTAL / NEVENTS, IQ_TOTAL / NEVENTS, total_IO / reqs, total_C / reqs, total_IO);
+            EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
         }
         nevents++;
       }
