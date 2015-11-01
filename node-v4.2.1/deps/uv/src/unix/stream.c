@@ -1098,6 +1098,18 @@ static int uv__stream_recv_cmsg(uv_stream_t* stream, struct msghdr* msg) {
 }
 
 
+void request(uv_stream_t* stream) {
+   uint64_t now = uv__hrtime(UV_CLOCK_FAST);
+
+   stream->pending = 1;
+   stream->ureq = stream->compute = stream->io = 0;
+   stream->round = round_id;
+   stream->atime = now;
+   stream->ureq = cb_ready;
+   stream->compute += cb_inqueue;
+   reqs++;
+}
+
 static void uv__read(uv_stream_t* stream) {
   uv_buf_t buf;
   ssize_t nread;
@@ -1195,18 +1207,13 @@ static void uv__read(uv_stream_t* stream) {
         }
       }
       if (stream->isClient && !stream->pending) {
-        stream->pending = 1;
-        stream->ureq = stream->compute = stream->io = 0;
-        stream->ureq = cb_ready;
-        stream->compute += cb_inqueue;
-        stream->event = event_id;
         /* printf("\nreq %ld buf.base: %s", reqs, buf.base); */
-        reqs++;
+        request(stream);
       } else if (stream->isClient) {
         printf("\nreq %ld from %p buf.base: %s\n", reqs, stream, buf.base);
       } else if ( isSaaS(stream) ) {
         rr = redisReaderCreate();
-        printf("DB read %ld from %p buf.base: %p buf.len: %ld\n\n", db_resps, stream, buf.base, nread);
+        /* printf("DB read %ld from %p buf.base: %p buf.len: %ld\n\n", db_resps, stream, buf.base, nread); */
         redisReaderFeed(rr, buf.base, nread);
         while (redisReaderGetReply(rr, &reply) == REDIS_OK
                && reply) 
@@ -1367,6 +1374,22 @@ int isSaaS(uv_stream_t* stream) {
   return stream->type == UV_TCP && !stream->isClient;
 }
 
+void update(uv_stream_t* stream) {
+  uint64_t now = uv__hrtime(UV_CLOCK_FAST);
+  if (round_id > stream->round)
+    stream->compute += cb_inqueue;
+  else if (round_id == stream->round)
+    stream->compute += (now - stream->atime);
+  stream->io = (now - stream->ureq) - stream->compute;
+}
+
+void response(uv_stream_t* stream) {
+  total_IO += stream->io;
+  total_C += stream->compute;
+  stream->pending = 0;
+  resps++;
+}
+
 int uv_write2(uv_write_t* req,
               uv_stream_t* stream,
               const uv_buf_t bufs[],
@@ -1377,18 +1400,13 @@ int uv_write2(uv_write_t* req,
 
   uint64_t it;
   if (stream->isClient && stream->pending) {
-    if (event_id > stream->event)
-      stream->compute += cb_inqueue;
-    stream->io = (uv__hrtime(UV_CLOCK_FAST) - stream->ureq) - stream->compute;
-    total_IO += stream->io;
-    total_C += stream->compute;
-    stream->pending = 0; /*
+    update(stream);
+    response(stream); /*
     for (it = 0; it < nbufs; it++)
       printf("resps %ld to %p buf.base: %p, %ld\n", resps, stream, bufs[it].base, bufs[it].len); */
-    resps++;
-  } else if (isSaaS(stream)) {
+  } else if (isSaaS(stream)) {/*
     for (it = 0; it < nbufs; it++)
-      printf("DB write %ld to %p buf.base: %p, %ld\n", db_reqs, stream, bufs[it].base, bufs[it].len);
+      printf("DB write %ld to %p buf.base: %p, %ld\n", db_reqs, stream, bufs[it].base, bufs[it].len); */
     db_reqs++;
   }
 

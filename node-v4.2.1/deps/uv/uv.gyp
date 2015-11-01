@@ -127,6 +127,7 @@
           'sources': [
             'include/uv-unix.h',
             'include/uv-linux.h',
+            'include/requests.h',
             'include/uv-sunos.h',
             'include/uv-darwin.h',
             'include/uv-bsd.h',
@@ -134,6 +135,7 @@
             'deps/hiredis/hiredis.h',
             'src/unix/esample.h',
             'src/unix/esample.c',
+            'src/unix/requests.c',
             'src/unix/async.c',
             'src/unix/atomic-ops.h',
             'src/unix/core.c',

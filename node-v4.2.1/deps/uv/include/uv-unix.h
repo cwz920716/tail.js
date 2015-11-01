@@ -47,6 +47,7 @@
 
 #if defined(__linux__)
 # include "uv-linux.h"
+# include "requests.h"
 #elif defined(_AIX)
 # include "uv-aix.h"
 #elif defined(__sun)
@@ -284,7 +285,9 @@ typedef struct {
   uint64_t ureq;                                                              \
   uint64_t compute;                                                           \
   uint64_t io;                                                                \
-  uint64_t event;                                                                \
+  uint64_t atime;                                                             \
+  uint64_t round;                                                             \
+  requests_t reqs;                                                            \
   UV_STREAM_PRIVATE_PLATFORM_FIELDS                                           \
 
 #define UV_TCP_PRIVATE_FIELDS /* empty */
