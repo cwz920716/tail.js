@@ -28,6 +28,7 @@
       'type': '<(uv_library)',
       'include_dirs': [
         'include',
+        'deps/hiredis',
         'src/',
       ],
       'direct_dependent_settings': {
@@ -130,6 +131,7 @@
             'include/uv-darwin.h',
             'include/uv-bsd.h',
             'include/uv-aix.h',
+            'deps/hiredis/hiredis.h',
             'src/unix/esample.h',
             'src/unix/esample.c',
             'src/unix/async.c',
@@ -155,7 +157,7 @@
             'src/unix/udp.c',
           ],
           'link_settings': {
-            'libraries': [ '-lm' ],
+            'libraries': [ '-lm', '/home/cwz/Eve/tail.js/node-v4.2.1/deps/uv/deps/hiredis/libhiredis.a' ],
             'conditions': [
               ['OS=="solaris"', {
                 'ldflags': [ '-pthreads' ],

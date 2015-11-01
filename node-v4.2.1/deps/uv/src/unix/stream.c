@@ -21,6 +21,8 @@
 
 #include "uv.h"
 #include "internal.h"
+#include "hiredis.h"
+#include "read.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,9 +38,10 @@
 #include <limits.h> /* IOV_MAX */
 
 /* extern counters */
-extern uint64_t conns, reqs, resps;
+extern uint64_t conns, reqs, resps, db_reqs, db_resps;
 extern uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, total_IO, total_C;
-extern uint64_t event_id;
+extern uint64_t event_id, round_id;
+int isSaaS(uv_stream_t* stream);
 
 #if defined(__APPLE__)
 # include <sys/event.h>
@@ -1104,6 +1107,9 @@ static void uv__read(uv_stream_t* stream) {
   int err;
   int is_ipc;
 
+  redisReader *rr;
+  void *reply = NULL;
+
   stream->flags &= ~UV_STREAM_READ_PARTIAL;
 
   /* Prevent loop starvation when the data comes in as fast as (or faster than)
@@ -1198,6 +1204,14 @@ static void uv__read(uv_stream_t* stream) {
         reqs++;
       } else if (stream->isClient) {
         printf("\nreq %ld from %p buf.base: %s\n", reqs, stream, buf.base);
+      } else if ( isSaaS(stream) ) {
+        rr = redisReaderCreate();
+        printf("DB read %ld from %p buf.base: %p buf.len: %ld\n\n", db_resps, stream, buf.base, nread);
+        redisReaderFeed(rr, buf.base, nread);
+        while (redisReaderGetReply(rr, &reply) == REDIS_OK
+               && reply) 
+          db_resps++;
+        redisReaderFree(rr);
       }
       stream->read_cb(stream, nread, &buf);
 
@@ -1349,6 +1363,9 @@ static void uv__stream_connect(uv_stream_t* stream) {
   }
 }
 
+int isSaaS(uv_stream_t* stream) {
+  return stream->type == UV_TCP && !stream->isClient;
+}
 
 int uv_write2(uv_write_t* req,
               uv_stream_t* stream,
@@ -1369,6 +1386,10 @@ int uv_write2(uv_write_t* req,
     for (it = 0; it < nbufs; it++)
       printf("resps %ld to %p buf.base: %p, %ld\n", resps, stream, bufs[it].base, bufs[it].len); */
     resps++;
+  } else if (isSaaS(stream)) {
+    for (it = 0; it < nbufs; it++)
+      printf("DB write %ld to %p buf.base: %p, %ld\n", db_reqs, stream, bufs[it].base, bufs[it].len);
+    db_reqs++;
   }
 
   assert(nbufs > 0);

@@ -148,7 +148,7 @@ extern void uv__inotify_read(uv_loop_t* loop, uv__io_t* w, unsigned int revents)
 extern void uv__udp_io(uv_loop_t* loop, uv__io_t* w, unsigned int revents);
 extern void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
-uint64_t conns = 0, reqs = 0, resps = 0;
+uint64_t conns = 0, reqs = 0, resps = 0, db_reqs = 0, db_resps = 0;
 uint64_t counter_per_type[7];
 
 static void check_cb(uv__io_cb cb) {
@@ -188,7 +188,7 @@ static void check_cb(uv__io_cb cb) {
  * Add some variable to profile the EVENT LOOP TIME 
  */
 uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
-uint64_t event_id = 0;
+uint64_t event_id = 0, round_id = 0;
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -298,6 +298,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         no_epoll_wait = 1;
     }
     cb_ready = uv__hrtime(UV_CLOCK_FAST);
+    round_id++;
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))
@@ -406,7 +407,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 10) {
             printf("----------\n");
             /* st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999); */
-            printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
+            printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);
             cb_lastp = cb_prepare;
             st_clean();
             printf("\n"); 
