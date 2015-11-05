@@ -407,7 +407,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
         EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
-        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 60) {
+        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 10) {
             printf("----------\n");
             /* st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999); */
             printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);

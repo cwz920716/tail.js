@@ -1367,7 +1367,7 @@ void update(uv_stream_t* stream) {
 }
 
 void response(uv_stream_t* stream) {
-  update(stream);
+  update(response);
   total_IO += stream->io;
   total_C += stream->compute;
   stream->pending = 0;

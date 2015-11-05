@@ -58,7 +58,7 @@ void *popRQ(requests_t *r, FILE *fp) {
     return NULL;
 
   ret = item->req;
-  fprintf(fp, "%ld\t%ld\t%ld\t%f\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io) );
+  fprintf(fp, "%ld\t%ld\t%ld\t%f\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute *1.0 / item->io) );
   uv__free(item);
   return ret;
 }
