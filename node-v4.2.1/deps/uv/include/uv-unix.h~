@@ -282,8 +282,8 @@ typedef struct {
   void* queued_fds;                                                           \
   uint64_t pending; /* Added By Wenzhi */                                     \
   uint64_t stime;                                                             \
-  int      reqId;                                                             \
-  int      nextId;                                                            \
+  uint64_t reqId;                                                             \
+  uint64_t nextId;                                                            \
   uint64_t compute;                                                           \
   uint64_t io;                                                                \
   uint64_t atime;                                                             \

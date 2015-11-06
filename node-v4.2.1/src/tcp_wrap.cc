@@ -105,6 +105,8 @@ void TCPWrap::Initialize(Local<Object> target,
   env->SetProtoMethod(t, "setKeepAlive", SetKeepAlive);
   env->SetProtoMethod(t, "doPrint", DoPrint);
   env->SetProtoMethod(t, "uv_request", NotifyUV_Request);
+  env->SetProtoMethod(t, "uv_response", NotifyUV_Response);
+  env->SetProtoMethod(t, "uv_eventOf", NotifyUV_EventOf);
 
 #ifdef _WIN32
   env->SetProtoMethod(t, "setSimultaneousAccepts", SetSimultaneousAccepts);
@@ -250,6 +252,19 @@ void TCPWrap::NotifyUV_Request(const FunctionCallbackInfo<Value>& args) {
   uv_tcp_t* handle = wrap->UVHandle();
   int reqId = uv_new_http_request(reinterpret_cast<uv_stream_t*>(handle));
   args.GetReturnValue().Set(reqId);
+}
+
+void TCPWrap::NotifyUV_Response(const FunctionCallbackInfo<Value>& args) {
+  TCPWrap* wrap = Unwrap<TCPWrap>(args.Holder());
+  uv_tcp_t* handle = wrap->UVHandle();
+  uv_new_http_response(reinterpret_cast<uv_stream_t*>(handle));
+}
+
+void TCPWrap::NotifyUV_EventOf(const FunctionCallbackInfo<Value>& args) {
+  TCPWrap* wrap = Unwrap<TCPWrap>(args.Holder());
+  int reqId = args[0]->Int32Value();
+  uv_tcp_t* handle = wrap->UVHandle();
+  uv_eventOf(reinterpret_cast<uv_stream_t*>(handle), reqId);
 }
 
 

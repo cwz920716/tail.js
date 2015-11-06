@@ -41,7 +41,67 @@ extern uint64_t conns, reqs, resps, db_reqs, db_resps;
 extern uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, total_IO, total_C;
 extern uint64_t event_id, round_id;
 extern requests_t logs;
-int isSaaS(uv_stream_t* stream);
+
+static void request(uv_stream_t* stream) {
+  uint64_t now = uv__hrtime(UV_CLOCK_FAST);
+  if (stream->pending) {
+    printf("pending request\n");
+    return;
+  }
+
+  stream->pending = 1;
+  stream->compute = stream->io = 0;
+  stream->round = round_id;
+  stream->atime = now;
+  stream->stime = cb_ready; /* start time */
+  stream->compute += (now - cb_ready);
+  stream->reqId = stream->nextId;
+  stream->nextId++; 
+  reqs++;
+}
+
+void update(uv_stream_t* stream) {
+  uint64_t now = uv__hrtime(UV_CLOCK_FAST);
+  if (round_id != stream->round)
+    stream->compute += (now - cb_ready);
+  else if (round_id == stream->round)
+    stream->compute += (now - stream->atime);
+  stream->round = round_id;
+  stream->atime = now;
+  stream->io = (now - stream->stime) - stream->compute;
+}
+
+void response(uv_stream_t* stream) {
+  if (!stream->pending) {
+    printf("non pending response\n");
+    return;
+  }
+
+  update(stream);
+  pushRQ(&logs, NULL, stream->io, stream->compute);
+  total_IO += stream->io;
+  total_C += stream->compute;
+  stream->pending = 0;
+  resps++;
+}
+
+int uv_new_http_request(uv_stream_t* handle) {
+  printf("%p: new HTTP at %lu\n", handle, event_id); 
+  request(handle);
+  return handle->reqId;
+}
+
+int uv_new_http_response(uv_stream_t* handle) {
+  printf("%p: finish HTTP\n", handle, event_id); 
+  response(handle);
+  return 0;
+}
+
+int uv_eventOf(uv_stream_t* handle, int reqId) {
+  printf("%p, %d: event acts on %d\n", handle, reqId, event_id);
+  update(handle);
+  return 0;
+}
 
 #if defined(__APPLE__)
 # include <sys/event.h>
@@ -1094,26 +1154,6 @@ static int uv__stream_recv_cmsg(uv_stream_t* stream, struct msghdr* msg) {
 }
 
 
-static void request(uv_stream_t* stream) {
-   uint64_t now = uv__hrtime(UV_CLOCK_FAST);
-
-   stream->pending = 1;
-   stream->compute = stream->io = 0;
-   stream->round = round_id;
-   stream->atime = now;
-   stream->stime = cb_ready; /* start time */
-   stream->compute += (now - cb_ready);
-   stream->reqId = stream->nextId;
-   stream->nextId++; 
-   reqs++;
-}
-
-int uv_new_http_request(uv_stream_t* handle) {
-  printf("%p: new HTTP\n", handle);
-  request(handle);
-  return handle->reqId;
-}
-
 static void uv__read(uv_stream_t* stream) {
   uv_buf_t buf;
   ssize_t nread;
@@ -1355,23 +1395,6 @@ static void uv__stream_connect(uv_stream_t* stream) {
     uv__stream_flush_write_queue(stream, -ECANCELED);
     uv__write_callbacks(stream);
   }
-}
-
-void update(uv_stream_t* stream) {
-  uint64_t now = uv__hrtime(UV_CLOCK_FAST);
-  if (round_id > stream->round)
-    stream->compute += (now - cb_ready);
-  else if (round_id == stream->round)
-    stream->compute += (now - stream->atime);
-  stream->io = (now - stream->stime) - stream->compute;
-}
-
-void response(uv_stream_t* stream) {
-  update(response);
-  total_IO += stream->io;
-  total_C += stream->compute;
-  stream->pending = 0;
-  resps++;
 }
 
 int uv_write2(uv_write_t* req,

@@ -206,7 +206,7 @@ fs.accessSync = function(path, mode) {
 };
 
 fs.exists = function(path, callback) {
-  callback = wrapMe(callback);
+  callback = wrapMe(callback, true);
   if (!nullCheck(path, cb)) return;
   var req = new FSReqWrap();
   req.oncomplete = cb;
@@ -228,7 +228,7 @@ fs.existsSync = function(path) {
 
 fs.readFile = function(path, options, callback_) {
   var callback = maybeCallback(arguments[arguments.length - 1]);
-  callback = wrapMe(callback);
+  callback = wrapMe(callback, true);
 
   if (!options || typeof options === 'function') {
     options = { encoding: null, flag: 'r' };

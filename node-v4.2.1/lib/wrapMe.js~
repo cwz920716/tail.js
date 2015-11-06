@@ -14,9 +14,7 @@ exports.createContext = createContext;
 
 function enterContext(ctx) {
   cstack.push(ctx);
-  if (ctx === null)
-    return;
-
+  if 
   ctx.socket._handle.uv_eventOf(ctx.reqId);
 }
 exports.enterContext = enterContext;

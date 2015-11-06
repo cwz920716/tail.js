@@ -1,6 +1,6 @@
 'use strict';
 
-const wrapMe = require('wrapMe');
+const wrapMe = require('wrapMe').wrapMe;
 const createContext = wrapMe.createContext;
 const enterContext = wrapMe.enterContext;
 const exitContext = wrapMe.exitContext;

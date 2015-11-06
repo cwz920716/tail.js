@@ -41,8 +41,8 @@ class TCPWrap : public StreamWrap {
   // Here becomes the uv-node API to make libuv aware of the existence of 
   static void DoPrint(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void NotifyUV_Request(const v8::FunctionCallbackInfo<v8::Value>& args);
-  // static void NotifyUV_Response(const v8::FunctionCallbackInfo<v8::Value>& args);
-  // static void NotifyUV_Activate(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void NotifyUV_Response(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void NotifyUV_EventOf(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 #ifdef _WIN32
   static void SetSimultaneousAccepts(
