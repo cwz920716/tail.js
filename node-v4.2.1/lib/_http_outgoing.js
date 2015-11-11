@@ -528,7 +528,9 @@ const crlf_buf = new Buffer('\r\n');
 
 OutgoingMessage.prototype.end = function(data, encoding, callback) {
   if (this._uvSetup) {
-    this._uv_socket._handle.uv_response();
+    if (this._uv_socket._handle !== null) {
+      this._uv_socket._handle.uv_response();
+    }
   }
 
   if (typeof data === 'function') {

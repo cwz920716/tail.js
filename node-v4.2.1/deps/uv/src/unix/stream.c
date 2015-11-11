@@ -93,7 +93,7 @@ void response(uv_stream_t* stream) {
 }
 
 int uv_new_http_request(uv_stream_t* handle) {
-  /* printf("%p: new HTTP at %lu\n", handle, event_id); */ 
+  /* printf("%p: new HTTP at %lu\n", handle, event_id); */  
   request(handle);
   return handle->reqId;
 }

@@ -62,13 +62,22 @@ static void uv_sched_setaffinity (void) {
 
 void uv_set_cpufreq(void) {
   int s, cpu = 0;
-  uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0;
-  cpu_cur = cpufreq_get_freq_kernel(cpu);
+  uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0, cpu_togo = 0;
+  char *freq = NULL;
+
   cpufreq_get_hardware_limits(cpu, &cpu_min, &cpu_max);
-  s = cpufreq_set_frequency(cpu, cpu_max);
+  freq = getenv("NODE_CPU0_FREQ");
+  printf("%s ", freq);
+  if (freq) {
+    cpu_togo = atoll(freq);
+  } else
+    cpu_togo = cpu_max;
+
+  s = cpufreq_set_frequency(cpu, cpu_togo);
   if (s != 0) {
     printf("ERROR: uv_set_cpufreq failed!\n");
   }
+  cpu_cur = cpufreq_get_freq_kernel(cpu);
   printf("Current CPU Frequency: %luHz, Min: %luHz, Max: %luHz\n", cpu_cur, cpu_min, cpu_max);
   
 }

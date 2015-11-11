@@ -5,7 +5,7 @@ make clean
 cd ..
 
 cd redis-server
-sudo rm -f *.txt
+sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..
 
 cd tools

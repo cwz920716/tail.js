@@ -436,13 +436,13 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
             if (reqs != 0)
                 printf("cb exec_avg time (ns): %lu, inqueue_avg: %lu, io_avg: %lu, compute_avg: %lu, io: %lx\n", EX_TOTAL / NEVENTS, IQ_TOTAL / NEVENTS, total_IO / reqs, total_C / reqs, total_IO);
             EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
-            outfile= fopen("logs.txt", "w");
+            outfile= fopen("/tmp/logs.txt", "w");
 
             while (!emptyRQ(&logs))
               popRQ(&logs, outfile);
 
             fclose(outfile);
-            outfile= fopen("loops.txt", "w");
+            outfile= fopen("/tmp/loops.txt", "w");
 
             while (!emptyRQ(&loops))
               popRQ(&loops, outfile);

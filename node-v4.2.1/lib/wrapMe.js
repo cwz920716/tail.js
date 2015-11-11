@@ -3,6 +3,10 @@
 var cstack = [];
 
 function Context(socket, reqId) {
+  if (socket._handle === null) {
+    console.log('ERROR: _handle is null!');
+  }
+
   this.socket = socket;
   this.reqId = reqId;
 }
@@ -16,6 +20,10 @@ function enterContext(ctx) {
   cstack.push(ctx);
   if (ctx === null)
     return;
+  if (ctx.socket._handle === null) {
+    console.log('SILENCE: _handle is null!');
+    return;
+  }
 
   ctx.socket._handle.uv_eventOf(ctx.reqId);
 }
