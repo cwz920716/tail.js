@@ -6,5 +6,6 @@ make clean
 cd ..
 for file in `find . -type f -name '*~'`
 do
-  git rm $file
+  echo $file
+  rm $file
 done

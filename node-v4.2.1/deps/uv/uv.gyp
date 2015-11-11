@@ -159,7 +159,7 @@
             'src/unix/udp.c',
           ],
           'link_settings': {
-            'libraries': [ '-lm', '-lcpufreq', '/home/cwz/Eve/tail.js/node-v4.2.1/deps/uv/deps/hiredis/libhiredis.a' ],
+            'libraries': [ '-lm', '-lcpufreq' ],
             'conditions': [
               ['OS=="solaris"', {
                 'ldflags': [ '-pthreads' ],
