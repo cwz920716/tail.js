@@ -47,7 +47,7 @@ static void uv_pthread_setaffinity (void) {
 }
 
 static void uv_sched_setaffinity (void) {
-  int s, j = 5;
+  int s, j = 0;
   cpu_set_t cpuset; 
 
   CPU_ZERO(&cpuset);
