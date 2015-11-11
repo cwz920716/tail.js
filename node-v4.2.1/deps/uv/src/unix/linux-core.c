@@ -22,6 +22,7 @@
 #include "internal.h"
 #include "esample.h"
 #include "requests.h"
+#include <cpufreq.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -151,7 +152,8 @@ extern void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
 uint64_t conns = 0, reqs = 0, resps = 0, db_reqs = 0, db_resps = 0;
 uint64_t counter_per_type[7];
-requests_t logs = {NULL, NULL};
+requests_t logs = {NULL, NULL, 0};
+requests_t loops = {NULL, NULL, 0};
 FILE *outfile;
 
 static void check_cb(uv__io_cb cb) {
@@ -190,8 +192,8 @@ static void check_cb(uv__io_cb cb) {
 /* Author: Wenzhi
  * Add some variable to profile the EVENT LOOP TIME 
  */
-uint64_t cb_prepare, cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
-uint64_t event_id = 0, round_id = 0;
+uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
+uint64_t event_id = 0, round_id = 0, round_it = 0, round_exec = 0;
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -300,8 +302,12 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (nfds == -1 && errno == ENOSYS)
         no_epoll_wait = 1;
     }
-    cb_ready = uv__hrtime(UV_CLOCK_FAST);
+    cb_ready = uv__cputime();
+    _cb_ready = uv__hrtime(UV_CLOCK_FAST);
+    pushRQ(&loops, NULL, nfds, 0, 0);
     round_id++;
+    round_it = 0;
+    round_exec = 0;
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))
@@ -349,6 +355,17 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     loop->watchers[loop->nwatchers] = (void*) events;
     loop->watchers[loop->nwatchers + 1] = (void*) (uintptr_t) nfds;
     for (i = 0; i < nfds; i++) {
+      /*
+      if (nfds - i >= 20) {
+        if (in low frequency) {
+          jump to high frequency
+        }
+      } else {
+        if (in high frequence) {
+          reset to low frequency
+        }
+      } */
+
       pe = events + i;
       fd = pe->data;
 
@@ -397,21 +414,23 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         pe->events |= w->pevents & (UV__EPOLLIN | UV__EPOLLOUT);
 
       if (pe->events != 0) {
-        cb_prepare = uv__hrtime(UV_CLOCK_FAST);
+        cb_prepare = uv__cputime();
         cb_inqueue = cb_prepare - cb_ready;
         IQ_TOTAL += cb_inqueue;
         NEVENTS++;
         event_id++;
         w->cb(loop, w, pe->events);
+        round_it++; 
         check_cb(w->cb);
-        cb_exec = uv__hrtime(UV_CLOCK_FAST) - cb_prepare;
+        cb_exec = uv__cputime() - cb_prepare;
+        round_exec += cb_exec;
         EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
-        if ( (cb_prepare - cb_lastp) > (uint64_t) 1e9 * 60) {
+        if ( (uv__hrtime(UV_CLOCK_FAST) - cb_lastp) > (uint64_t) 1e9 * 60) {
             printf("----------\n");
             /* st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999); */
             printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);
-            cb_lastp = cb_prepare;
+            cb_lastp = uv__hrtime(UV_CLOCK_FAST);
             st_clean();
             printf("\n"); 
             if (reqs != 0)
@@ -421,6 +440,12 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
 
             while (!emptyRQ(&logs))
               popRQ(&logs, outfile);
+
+            fclose(outfile);
+            outfile= fopen("loops.txt", "w");
+
+            while (!emptyRQ(&loops))
+              popRQ(&loops, outfile);
 
             fclose(outfile);
         }
@@ -482,6 +507,18 @@ uint64_t uv__hrtime(uv_clocktype_t type) {
   clock_id = CLOCK_MONOTONIC;
   if (type == UV_CLOCK_FAST)
     clock_id = fast_clock_id;
+
+  if (clock_gettime(clock_id, &t))
+    return 0;  /* Not really possible. */
+
+  return t.tv_sec * (uint64_t) 1e9 + t.tv_nsec;
+}
+
+uint64_t uv__cputime(void) {
+  struct timespec t;
+  clock_t clock_id;
+
+  clock_id = CLOCK_THREAD_CPUTIME_ID;
 
   if (clock_gettime(clock_id, &t))
     return 0;  /* Not really possible. */

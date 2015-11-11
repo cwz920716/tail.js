@@ -27,6 +27,51 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <cpufreq.h>
+
+static void uv_pthread_setaffinity (void) {
+  int s, j = 3;
+  cpu_set_t cpuset; 
+  pthread_t thread;
+
+  thread = pthread_self();
+  CPU_ZERO(&cpuset);
+  CPU_SET(j, &cpuset);
+  s = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("ERROR: uv_pthread_setaffinity failed!\n");
+  }
+
+  return;
+}
+
+static void uv_sched_setaffinity (void) {
+  int s, j = 5;
+  cpu_set_t cpuset; 
+
+  CPU_ZERO(&cpuset);
+  CPU_SET(j, &cpuset);
+  s = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("ERROR: uv_sched_setaffinity failed!\n");
+  }
+
+  return;
+}
+
+void uv_set_cpufreq(void) {
+  int s, cpu = 0;
+  uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0;
+  cpu_cur = cpufreq_get_freq_kernel(cpu);
+  cpufreq_get_hardware_limits(cpu, &cpu_min, &cpu_max);
+  s = cpufreq_set_frequency(cpu, cpu_max);
+  if (s != 0) {
+    printf("ERROR: uv_set_cpufreq failed!\n");
+  }
+  printf("Current CPU Frequency: %luHz, Min: %luHz, Max: %luHz\n", cpu_cur, cpu_min, cpu_max);
+  
+}
 
 int uv_loop_init(uv_loop_t* loop) {
   int err;
@@ -88,6 +133,8 @@ int uv_loop_init(uv_loop_t* loop) {
   loop->wq_async.flags |= UV__HANDLE_INTERNAL;
 
   st_init();
+  uv_sched_setaffinity();
+  uv_set_cpufreq();
   return 0;
 
 fail_async_init:

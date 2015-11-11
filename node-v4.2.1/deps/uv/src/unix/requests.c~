@@ -38,7 +38,7 @@ item_t *pop_req_queue(requests_t *r) {
   return ret;
 }
 
-void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute) {
+void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock) {
   item_t *item = (item_t *) uv__malloc(sizeof(item_t));
   if (!item)
     return;
@@ -46,6 +46,7 @@ void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute) {
   item->req = req;
   item->io = io;
   item->compute = compute;
+  item->wallclock = wallclock;
   item->next = NULL;
   push_req_queue(r, item);
 }
@@ -58,7 +59,7 @@ void *popRQ(requests_t *r, FILE *fp) {
     return NULL;
 
   ret = item->req;
-  fprintf(fp, "%ld\t%ld\t%ld\t%f\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute *1.0 / item->io) );
+  fprintf(fp, "%ld\t%ld\t%ld\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io), item->wallclock );
   uv__free(item);
   return ret;
 }

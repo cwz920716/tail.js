@@ -281,6 +281,7 @@ typedef struct {
   int accepted_fd;                                                            \
   void* queued_fds;                                                           \
   uint64_t pending; /* Added By Wenzhi */                                     \
+  uint64_t _stime;                                                            \
   uint64_t stime;                                                             \
   int      reqId;                                                             \
   int      nextId;                                                            \
@@ -288,6 +289,8 @@ typedef struct {
   uint64_t io;                                                                \
   uint64_t atime;                                                             \
   uint64_t round;                                                             \
+  uint64_t iter;                                                              \
+  uint64_t last_it;                                                           \
   requests_t reqs;                                                            \
   UV_STREAM_PRIVATE_PLATFORM_FIELDS                                           \
 
