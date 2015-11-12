@@ -60,16 +60,22 @@ static void uv_sched_setaffinity (void) {
   return;
 }
 
+extern uint64_t flex_mode, freq;
 void uv_set_cpufreq(void) {
   int s, cpu = 0;
   uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0, cpu_togo = 0;
-  char *freq = NULL;
+  char *freq_str = NULL;
 
   cpufreq_get_hardware_limits(cpu, &cpu_min, &cpu_max);
-  freq = getenv("NODE_CPU0_FREQ");
-  printf("%s ", freq);
-  if (freq) {
-    cpu_togo = atoll(freq);
+  freq_str = getenv("NODE_CPU0_FREQ");
+  printf("%s ", freq_str);
+  if (freq_str) {
+    cpu_togo = atoll(freq_str);
+    if (cpu_togo == 0) {
+      cpu_togo = 2200000;
+      flex_mode = 1;
+      freq = 0;
+    }
   } else
     cpu_togo = cpu_max;
 

@@ -194,6 +194,8 @@ static void check_cb(uv__io_cb cb) {
  */
 uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
 uint64_t event_id = 0, round_id = 0, round_it = 0, round_exec = 0;
+uint64_t flex_mode = 0, freq = 0;
+/* freq = 0: Low freq; freq = 1: High freq; */
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -308,6 +310,12 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     round_id++;
     round_it = 0;
     round_exec = 0;
+    if (flex_mode) {
+      if (nfds >= 100) {
+        cpufreq_set_frequency(0, 3200000);
+        freq = 1;
+      }
+    }
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))
@@ -355,17 +363,6 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     loop->watchers[loop->nwatchers] = (void*) events;
     loop->watchers[loop->nwatchers + 1] = (void*) (uintptr_t) nfds;
     for (i = 0; i < nfds; i++) {
-      /*
-      if (nfds - i >= 20) {
-        if (in low frequency) {
-          jump to high frequency
-        }
-      } else {
-        if (in high frequence) {
-          reset to low frequency
-        }
-      } */
-
       pe = events + i;
       fd = pe->data;
 
@@ -450,6 +447,12 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
             fclose(outfile);
         }
         nevents++;
+      }
+    }
+    if (flex_mode) {
+      if (freq == 1) {
+        cpufreq_set_frequency(0, 2200000);
+        freq = 0;
       }
     }
     loop->watchers[loop->nwatchers] = NULL;

@@ -2,7 +2,7 @@
 
 pkill node
 
-freqs="3200000 2200000 1200000"
+freqs="3200000 2200000 1200000 0"
 for f in $freqs
 do
   export NODE_CPU0_FREQ=$f
