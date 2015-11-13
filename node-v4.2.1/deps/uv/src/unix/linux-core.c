@@ -194,7 +194,7 @@ static void check_cb(uv__io_cb cb) {
  */
 uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
 uint64_t event_id = 0, round_id = 0, round_it = 0, round_exec = 0;
-uint64_t flex_mode = 0, freq = 0;
+uint64_t flex_mode = 0, freq = 0, threshold = -1;
 /* freq = 0: Low freq; freq = 1: High freq; */
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
@@ -311,7 +311,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     round_it = 0;
     round_exec = 0;
     if (flex_mode) {
-      if (nfds >= 100) {
+      if (nfds >= threshold) {
         cpufreq_set_frequency(0, 3200000);
         freq = 1;
       }
@@ -451,7 +451,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     }
     if (flex_mode) {
       if (freq == 1) {
-        cpufreq_set_frequency(0, 2200000);
+        cpufreq_set_frequency(0, 1200000);
         freq = 0;
       }
     }

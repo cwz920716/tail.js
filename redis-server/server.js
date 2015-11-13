@@ -16,14 +16,14 @@ server = http.createServer(function (request, response) {
     });
 
     var redis_info, total_requests;
-
+/*
     redis_client.info(function (err, reply) {
         redis_info = reply; // stash response in outer scope
     });
     redis_client.incr('requests', function (err, reply) {
         total_requests = reply; // stash response in outer scope
     });
-    redis_client.hincrby('ip', request.connection.remoteAddress, 1);
+    redis_client.hincrby('ip', request.connection.remoteAddress, 1); */
     redis_client.hgetall('ip', function (err, reply) {
         // This is the last reply, so all of the previous replies must have completed already
         response.write('This page was generated after talking to redis.\n\n' +

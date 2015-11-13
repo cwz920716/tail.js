@@ -21,7 +21,7 @@ function enterContext(ctx) {
   if (ctx === null)
     return;
   if (ctx.socket._handle === null) {
-    console.log('SILENCE: _handle is null!');
+    // console.log('SILENCE: _handle is null!');
     return;
   }
 

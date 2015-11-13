@@ -60,7 +60,7 @@ static void uv_sched_setaffinity (void) {
   return;
 }
 
-extern uint64_t flex_mode, freq;
+extern uint64_t flex_mode, freq, threshold;
 void uv_set_cpufreq(void) {
   int s, cpu = 0;
   uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0, cpu_togo = 0;
@@ -71,10 +71,13 @@ void uv_set_cpufreq(void) {
   printf("%s ", freq_str);
   if (freq_str) {
     cpu_togo = atoll(freq_str);
+    flex_mode = 0;
     if (cpu_togo == 0) {
-      cpu_togo = 2200000;
+      cpu_togo = 1200000;
       flex_mode = 1;
       freq = 0;
+      threshold = atoi(getenv("NODE_QUEUE_THRESHOLD"));
+      printf("FLEX MODE: threshold = %lu\n", threshold);
     }
   } else
     cpu_togo = cpu_max;
