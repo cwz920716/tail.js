@@ -192,6 +192,7 @@ static void check_cb(uv__io_cb cb) {
 /* Author: Wenzhi
  * Add some variable to profile the EVENT LOOP TIME 
  */
+uint64_t prog_start = 0, prog_inflex = 0, prog_all = 0;
 uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
 uint64_t event_id = 0, round_id = 0, round_it = 0, round_exec = 0;
 uint64_t flex_mode = 0, freq = 0, threshold = -1;
@@ -420,6 +421,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         round_it++; 
         check_cb(w->cb);
         cb_exec = uv__cputime() - cb_prepare;
+        if (freq == 1 && flex_mode)
+            prog_inflex += cb_exec;
         round_exec += cb_exec;
         EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
@@ -427,6 +430,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
             printf("----------\n");
             /* st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999); */
             printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);
+            prog_all = uv__cputime() - prog_start;
+            printf("flex/all=%lu/%lu\n", prog_inflex, prog_all);
             cb_lastp = uv__hrtime(UV_CLOCK_FAST);
             st_clean();
             printf("\n"); 

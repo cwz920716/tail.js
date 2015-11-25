@@ -30,7 +30,7 @@ for lines in file:
 file.close()
 
 verbose = 1
-sto = sys.argv[1] + '.cdf'
+sto = sys.argv[1] + '-' + sys.argv[4] + '.cdf'
 
 dps = create_cdf.create_cdf(datapoints)
 dps.cdf(sto, verbose)

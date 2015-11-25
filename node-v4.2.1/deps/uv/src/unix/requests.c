@@ -39,7 +39,7 @@ item_t *pop_req_queue(requests_t *r) {
 }
 
 void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock) {
-  if (r->cnt < 400) {
+  if (r->cnt < 100) {
     r->cnt++;
     return;
   }
@@ -64,7 +64,8 @@ void *popRQ(requests_t *r, FILE *fp) {
     return NULL;
 
   ret = item->req;
-  fprintf(fp, "%ld\t%ld\t%ld\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io), item->wallclock );
+  if (item->compute + item->io > 0)
+    fprintf(fp, "%ld\t%ld\t%ld\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io), item->wallclock );
   uv__free(item);
   return ret;
 }

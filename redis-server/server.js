@@ -8,7 +8,7 @@ function diff(a, b) {
 var total = 0, n = 0, lastp = process.hrtime(), maxTime = 0;
 
 var http = require('http'), server,
-    redis_client = require('redis').createClient();
+    redis_client = require('redis').createClient(6379, "146.6.53.164");
 
 server = http.createServer(function (request, response) {
     response.writeHead(200, {
@@ -16,14 +16,14 @@ server = http.createServer(function (request, response) {
     });
 
     var redis_info, total_requests;
-/*
+
     redis_client.info(function (err, reply) {
         redis_info = reply; // stash response in outer scope
     });
     redis_client.incr('requests', function (err, reply) {
         total_requests = reply; // stash response in outer scope
     });
-    redis_client.hincrby('ip', request.connection.remoteAddress, 1); */
+    redis_client.hincrby('ip', request.connection.remoteAddress, 1);
     redis_client.hgetall('ip', function (err, reply) {
         // This is the last reply, so all of the previous replies must have completed already
         response.write('This page was generated after talking to redis.\n\n' +

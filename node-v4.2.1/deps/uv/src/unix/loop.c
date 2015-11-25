@@ -60,17 +60,18 @@ static void uv_sched_setaffinity (void) {
   return;
 }
 
+extern uint64_t prog_start;
 extern uint64_t flex_mode, freq, threshold;
 void uv_set_cpufreq(void) {
-  int s, cpu = 0;
-  uint64_t cpu_cur = 0, cpu_max = 0, cpu_min = 0, cpu_togo = 0;
+  int s = 0, cpu = 0, skip = 0;
+  uint64_t cpu_cur = 0;
+  long cpu_togo = 0;
   char *freq_str = NULL;
 
-  cpufreq_get_hardware_limits(cpu, &cpu_min, &cpu_max);
   freq_str = getenv("NODE_CPU0_FREQ");
   printf("%s ", freq_str);
   if (freq_str) {
-    cpu_togo = atoll(freq_str);
+    cpu_togo = atol(freq_str);
     flex_mode = 0;
     if (cpu_togo == 0) {
       cpu_togo = 1200000;
@@ -78,16 +79,21 @@ void uv_set_cpufreq(void) {
       freq = 0;
       threshold = atoi(getenv("NODE_QUEUE_THRESHOLD"));
       printf("FLEX MODE: threshold = %lu\n", threshold);
+    } else if (cpu_togo < 0) {
+      skip = 1;
+      printf("SKIP MODE ");
     }
   } else
-    cpu_togo = cpu_max;
+    cpu_togo = 3200000;
 
-  s = cpufreq_set_frequency(cpu, cpu_togo);
+  if (!skip)
+    s = cpufreq_set_frequency(cpu, cpu_togo);
   if (s != 0) {
     printf("ERROR: uv_set_cpufreq failed!\n");
   }
   cpu_cur = cpufreq_get_freq_kernel(cpu);
-  printf("Current CPU Frequency: %luHz, Min: %luHz, Max: %luHz\n", cpu_cur, cpu_min, cpu_max);
+  prog_start = uv__cputime();
+  printf("Current CPU Frequency: %luKHz\n", cpu_cur);
   
 }
 
