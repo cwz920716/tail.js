@@ -4,6 +4,10 @@ cd node-v4.2.1
 make clean
 cd ..
 
+cd instrument-v8/node-v4.2.1
+make clean
+cd ../..
+
 cd redis-server
 sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..
