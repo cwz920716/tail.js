@@ -97,19 +97,19 @@ void response(uv_stream_t* stream) {
 }
 
 int uv_new_http_request(uv_stream_t* handle) {
-  /* printf("%p: new HTTP at %lu\n", handle, event_id); */  
+  printf("%p: new HTTP at %lu\n", handle, event_id);  
   request(handle);
   return handle->reqId;
 }
 
 int uv_new_http_response(uv_stream_t* handle) {
-  /* printf("%p: finish HTTP at %lu\n", handle, event_id); */ 
+  printf("%p: finish HTTP at %lu\n", handle, event_id); 
   response(handle);
   return 0;
 }
 
 int uv_eventOf(uv_stream_t* handle, int reqId) {
-  /* printf("%p, %d: event acts at %lu\n", handle, reqId, event_id); */
+  printf("%p, %d: event acts at %lu\n", handle, reqId, event_id);
   update(handle, reqId);
   return 0;
 }
