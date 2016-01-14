@@ -1,4 +1,4 @@
-var HOST = 'localhost';
+var HOST = '146.6.53.156';
 var PORT = 50000;
 
 var GRID_SIZE = 10;
@@ -52,7 +52,7 @@ function setPos(id, row, col) {
 }
 
 function getPos(id) {
-	console.log(positions);
+	// console.log(positions);
 	return positions[id];
 }
 
@@ -105,7 +105,7 @@ fu.get("/register", function(request, response) {
 		grid : grid
 	});
 	
-	sys.puts('<' + id + '>: has joined');
+	// sys.puts('<' + id + '>: has joined');
 	
 
 	mud.flush();	
@@ -141,7 +141,7 @@ fu.get("/part", function(request, response) {
 	
 	destroyID(id);
 	
-	sys.puts('<' + id + '>: has parted');
+	// sys.puts('<' + id + '>: has parted');
 	
 	response.simpleJSON(200, {});
 	

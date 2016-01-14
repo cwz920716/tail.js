@@ -63,8 +63,12 @@ static void request(uv_stream_t* stream) {
   reqs++;
 }
 
-void update(uv_stream_t* stream) {
+void update(uv_stream_t* stream, int reqId) {
   uint64_t now = uv__cputime();
+  if (!stream->pending || reqId < stream->reqId) {
+    return;
+  }
+
   if (round_id != stream->round) {
     stream->compute += (now - cb_ready);
     stream->iter += round_it; 
@@ -84,7 +88,7 @@ void response(uv_stream_t* stream) {
     return;
   }
 
-  update(stream);
+  update(stream, stream->reqId);
   pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter);
   total_IO += stream->io;
   total_C += stream->compute;
@@ -106,7 +110,7 @@ int uv_new_http_response(uv_stream_t* handle) {
 
 int uv_eventOf(uv_stream_t* handle, int reqId) {
   /* printf("%p, %d: event acts at %lu\n", handle, reqId, event_id); */
-  update(handle);
+  update(handle, reqId);
   return 0;
 }
 

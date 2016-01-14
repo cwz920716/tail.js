@@ -12,6 +12,10 @@ cd redis-server
 sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..
 
+cd nodejs-mud
+sudo rm -f *.txt *.cdf *.pdf *.plt
+cd ..
+
 cd tools
 sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..
