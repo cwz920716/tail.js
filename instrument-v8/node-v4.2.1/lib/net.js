@@ -1480,7 +1480,7 @@ Server.prototype.close = function(cb) {
 
   if (this._handle) {
     if (this._handle.node_inside_of_request_handler) {
-      if (this._handle.node_inside_of_request_handler() > 0) 
+      if (this._handle.node_inside_of_request_handler() > 0)
         this._handle.node_exit_request_handler();
     }
 

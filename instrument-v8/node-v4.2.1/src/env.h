@@ -619,7 +619,7 @@ public:
     }
 
     Context *copy = new Context(ctx->_handle, ctx->_reqId);
-    uv_eventOf(ctx->_handle, ctx->_reqId);
+    // uv_eventOf(ctx->_handle, ctx->_reqId);
     cstack.push(copy);
   }
 
