@@ -276,8 +276,10 @@ void TCPWrap::Node_EnterRequestHandler(const FunctionCallbackInfo<Value>& args) 
   uv_stream_t *handle = reinterpret_cast<uv_stream_t*>(tcp);
   
   // check layer
-  assert(wrap->node_handler_layers == 0);
-  wrap->node_handler_layers++;
+  // assert(wrap->node_handler_layers == 0);
+  // wrap->node_handler_layers++;
+  instrument::Context ctx = {handle, reqId};
+  instrument::ContextStack::enterContext(ctx);
 }
 
 void TCPWrap::Node_ExitRequestHandler(const FunctionCallbackInfo<Value>& args) {
@@ -285,8 +287,9 @@ void TCPWrap::Node_ExitRequestHandler(const FunctionCallbackInfo<Value>& args) {
   instrument::ContextStack::exitContext();
 
   // check layer
-  assert(wrap->node_handler_layers == 1);
-  wrap->node_handler_layers--;
+  // assert(wrap->node_handler_layers == 1);
+  // wrap->node_handler_layers--;
+  instrument::ContextStack::exitContext();
 }
 
 void TCPWrap::Node_InsideOfRequestHandler(const FunctionCallbackInfo<Value>& args) {

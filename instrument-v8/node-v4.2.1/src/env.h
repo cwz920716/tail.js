@@ -594,42 +594,39 @@ using namespace std;
 
 class ContextStack;
 
-class Context {
-public:
+struct Context {
   uv_stream_t *_handle;
   int _reqId;
-
-  Context(uv_stream_t *handle, int reqId): _handle(handle), _reqId(reqId) {}
-  friend class ContextStack;
 };
 
 class ContextStack {
 public:
-  static stack<Context *> cstack;
+  static stack<Context> cstack;
 
-  static Context *getContext() {
+  static bool inContext() {
+    return !cstack.empty();
+  }
+
+  static Context getContext() {
+    Context fake = {NULL, 0};
     if (cstack.empty())
-      return NULL;
+      return fake;
     return cstack.top();
   }
 
-  static void enterContext(Context *ctx) {
-    if (ctx) {
-      return;
-    }
-
-    Context *copy = new Context(ctx->_handle, ctx->_reqId);
-    uv_eventOf(ctx->_handle, ctx->_reqId);
-    cstack.push(copy);
+  static void enterContext(Context ctx) {
+    // printf("enterC\n");
+    uv_eventOf(ctx._handle, ctx._reqId);
+    cstack.push(ctx);
   }
 
   static void exitContext(void) {
     if (cstack.empty())
       return;
 
-    Context *top = cstack.top();
+    // printf("exitC\n");
     cstack.pop();
-    delete top;
+    // delete top;
   }
 };
 

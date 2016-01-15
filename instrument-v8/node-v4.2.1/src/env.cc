@@ -14,14 +14,15 @@ using v8::TryCatch;
 
 namespace instrument {
 
-stack<Context *> ContextStack::cstack;
+stack<Context> ContextStack::cstack;
 
 void createFunHandler(FunctionWrap *wrap) {
-  Context *ctx = ContextStack::getContext();
-  if (ctx) {
+  bool in = ContextStack::inContext();
+  Context ctx = ContextStack::getContext();
+  if (in) {
     wrap->setBoolFields(0, true);
-    wrap->setPointerFields(0, ctx->_handle);
-    wrap->setIntFields(0, ctx->_reqId);
+    wrap->setPointerFields(0, ctx._handle);
+    wrap->setIntFields(0, ctx._reqId);
   } else
     wrap->setBoolFields(0, false);
 }
@@ -30,8 +31,8 @@ void beforeCallHandler(FunctionWrap *wrap) {
   if (wrap->getBoolFields(0)) {
     uv_stream_t * handle = reinterpret_cast<uv_stream_t *> (wrap->getPointerFields(0));
     int reqId = wrap->getIntFields(0);
-    Context ctx(handle, reqId);
-    ContextStack::enterContext(&ctx);
+    Context ctx = {handle, reqId};
+    ContextStack::enterContext(ctx);
   }
 }
 

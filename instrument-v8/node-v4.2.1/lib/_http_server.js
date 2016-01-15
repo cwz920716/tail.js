@@ -2,6 +2,7 @@
 
 const util = require('util');
 const net = require('net');
+const TCP = process.binding('tcp_wrap').TCP;
 const EventEmitter = require('events');
 const HTTPParser = process.binding('http_parser').HTTPParser;
 const assert = require('assert').ok;
@@ -102,7 +103,7 @@ ServerResponse.prototype._uv_setup = function(socket, reqId) {
   this._uvSetup = true;
   this._uv_socket = socket;
   this._uv_rid = reqId;
-};
+}
 
 ServerResponse.prototype._finish = function() {
   DTRACE_HTTP_SERVER_RESPONSE(this.connection);
@@ -527,27 +528,25 @@ function connectionListener(socket) {
       } else {
         res.writeContinue();
         if (socket._handle && socket._handle.uv_request) {
-          var reqId = socket._handle.uv_request();
-          res._uv_setup(socket, reqId);
-          socket._handle.node_enter_request_handler(reqId);
-          self.emit('request', req, res);
-          if (socket._handle)
-            socket._handle.node_exit_request_handler(reqId);
-        } else {
-          self.emit('request', req, res);
-        }
-      }
-    } else {
-      if (socket._handle && socket._handle.uv_request) {
         var reqId = socket._handle.uv_request();
         res._uv_setup(socket, reqId);
         socket._handle.node_enter_request_handler(reqId);
         self.emit('request', req, res);
-        if (socket._handle)
-          socket._handle.node_exit_request_handler(reqId);
-      } else {
+        (new TCP()).node_exit_request_handler(reqId);
+        } else {
         self.emit('request', req, res);
+       }
       }
+    } else {
+        if (socket._handle && socket._handle.uv_request) {
+        var reqId = socket._handle.uv_request();
+        res._uv_setup(socket, reqId);
+        socket._handle.node_enter_request_handler(reqId);
+        self.emit('request', req, res);
+        (new TCP()).node_exit_request_handler(reqId);
+        } else {
+        self.emit('request', req, res);
+       }
     }
     return false; // Not a HEAD response. (Not even a response!)
   }
