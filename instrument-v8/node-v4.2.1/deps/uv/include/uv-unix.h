@@ -288,6 +288,7 @@ typedef struct {
   uint64_t compute;                                                           \
   uint64_t io;                                                                \
   uint64_t atime;                                                             \
+  uint64_t inq;                                                               \
   uint64_t round;                                                             \
   uint64_t iter;                                                              \
   uint64_t last_it;                                                           \

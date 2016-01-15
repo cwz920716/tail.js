@@ -48,14 +48,16 @@ static void request(uv_stream_t* stream) {
     printf("pending request\n");
     return;
   }
+  assert(cb_prepare < now && cb_prepare > cb_ready);
 
   stream->pending = 1;
-  stream->compute = stream->io = 0;
+  stream->inq = stream->compute = stream->io = 0;
   stream->round = round_id;
   stream->atime = now;
   stream->stime = cb_ready; /* start time */
   stream->_stime = _cb_ready; /* start time */
   stream->compute += (now - cb_ready);
+  stream->inq += (now - cb_prepare);
   stream->iter = round_it;
   stream->last_it = round_it;
   stream->reqId = stream->nextId;
@@ -68,14 +70,19 @@ void update(uv_stream_t* stream, int reqId) {
   if (!stream->pending || reqId < stream->reqId) {
     return;
   }
-
+  assert(cb_prepare < now && cb_prepare > cb_ready);
+  
   if (round_id != stream->round) {
     stream->compute += (now - cb_ready);
+    // stream->inq += (now - cb_prepare);
     stream->iter += round_it; 
   } else if (round_id == stream->round) {
     stream->compute += (now - stream->atime);
+    // stream->inq += (now - cb_prepare);
     stream->iter += (round_it - stream->last_it); 
   }
+  if (stream->round != round_id || stream->last_it != round_it)
+    stream->inq += (now - cb_prepare);
   stream->last_it = round_it;
   stream->round = round_id;
   stream->atime = now;
@@ -89,7 +96,7 @@ void response(uv_stream_t* stream) {
   }
 
   update(stream, stream->reqId);
-  pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter);
+  pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq);
   total_IO += stream->io;
   total_C += stream->compute;
   stream->pending = 0;

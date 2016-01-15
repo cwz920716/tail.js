@@ -15,6 +15,7 @@ typedef struct Item {
   uint64_t io;
   uint64_t compute;
   uint64_t wallclock;
+  uint64_t wait;
   struct Item *next;
 } item_t;
 
@@ -24,7 +25,7 @@ typedef struct {
   int cnt;
 } requests_t;
 
-void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock);
+void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock, uint64_t wait);
 
 void *popRQ(requests_t *r, FILE *fp);
 
