@@ -16,6 +16,10 @@ cd nodejs-mud
 sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..
 
+cd nodejs-todo
+sudo rm -f *.txt *.cdf *.pdf *.plt
+cd ..
+
 cd tools
 sudo rm -f *.txt *.cdf *.pdf *.plt
 cd ..

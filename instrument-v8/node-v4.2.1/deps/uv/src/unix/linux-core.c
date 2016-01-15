@@ -427,17 +427,17 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
         if ( (uv__hrtime(UV_CLOCK_FAST) - cb_lastp) > (uint64_t) 1e9 * 60) {
-            printf("----------\n");
+            /* printf("----------\n");
             st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
-            printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);
+            printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps); */
             prog_all = uv__cputime() - prog_start;
-            printf("flex/all=%lu/%lu\n", prog_inflex, prog_all);
+            /* printf("flex/all=%lu/%lu\n", prog_inflex, prog_all); */
             cb_lastp = uv__hrtime(UV_CLOCK_FAST);
             st_clean();
-            printf("\n"); 
+            /* printf("\n"); 
             if (reqs != 0)
                 printf("cb exec_avg time (ns): %lu, inqueue_avg: %lu, io_avg: %lu, compute_avg: %lu, io: %lx\n", EX_TOTAL / NEVENTS, IQ_TOTAL / NEVENTS, total_IO / reqs, total_C / reqs, total_IO);
-            EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
+            */ EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
             outfile= fopen("/tmp/logs.txt", "w");
 
             while (!emptyRQ(&logs))
