@@ -12,7 +12,7 @@
   "favicon": "favicon.ico",
   
   //IP and port which etherpad should bind at
-  "ip": "146.6.53.156",
+  "ip": "localhost",
   "port" : 50000,
 
   // Session Key, used for reconnecting user sessions

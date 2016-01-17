@@ -57,7 +57,7 @@ static void request(uv_stream_t* stream) {
   stream->stime = cb_ready; /* start time */
   stream->_stime = _cb_ready; /* start time */
   stream->compute += (now - cb_ready);
-  stream->inq += (now - cb_prepare);
+  stream->inq += (cb_prepare - cb_ready);
   stream->iter = round_it;
   stream->last_it = round_it;
   stream->reqId = stream->nextId;
@@ -70,19 +70,19 @@ void update(uv_stream_t* stream, int reqId) {
   if (!stream->pending || reqId < stream->reqId) {
     return;
   }
+  printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
   assert(cb_prepare < now && cb_prepare > cb_ready);
   
   if (round_id != stream->round) {
     stream->compute += (now - cb_ready);
-    // stream->inq += (now - cb_prepare);
+    stream->inq += (cb_prepare - cb_ready);
     stream->iter += round_it; 
   } else if (round_id == stream->round) {
     stream->compute += (now - stream->atime);
-    // stream->inq += (now - cb_prepare);
+    if (stream->last_it != round_it)
+        stream->inq += (cb_prepare - stream->atime);
     stream->iter += (round_it - stream->last_it); 
   }
-  if (stream->round != round_id || stream->last_it != round_it)
-    stream->inq += (now - cb_prepare);
   stream->last_it = round_it;
   stream->round = round_id;
   stream->atime = now;
@@ -104,19 +104,18 @@ void response(uv_stream_t* stream) {
 }
 
 int uv_new_http_request(uv_stream_t* handle) {
-  /* printf("%p: new HTTP at %lu\n", handle, event_id); */  
+  printf("%p: new HTTP at %lu\n", handle, event_id);  
   request(handle);
   return handle->reqId;
 }
 
 int uv_new_http_response(uv_stream_t* handle) {
-  /* printf("%p: finish HTTP at %lu\n", handle, event_id); */ 
+  printf("%p: finish HTTP at %lu\n", handle, event_id); 
   response(handle);
   return 0;
 }
 
 int uv_eventOf(uv_stream_t* handle, int reqId) {
-  /* printf("%p, %d: event acts at %lu\n", handle, reqId, event_id); */
   update(handle, reqId);
   return 0;
 }
