@@ -292,6 +292,7 @@ typedef struct {
   uint64_t round;                                                             \
   uint64_t iter;                                                              \
   uint64_t last_it;                                                           \
+  ArrayList_t events;                                                         \
   requests_t reqs;                                                            \
   UV_STREAM_PRIVATE_PLATFORM_FIELDS                                           \
 

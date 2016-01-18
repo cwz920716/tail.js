@@ -10,12 +10,38 @@
 #include <fcntl.h>
 #include <stdint.h>
 
+#define ALEN (20)
+
+typedef struct ArrayType {
+  uint64_t index;
+  uint64_t a[ALEN];
+  struct ArrayType *next;
+} array_t;
+
+typedef struct ArrayList {
+  array_t head;
+  array_t *tail_pos, *head_pos;
+  uint64_t len;
+  uint64_t max_len;
+} ArrayList_t;
+
+array_t *newArray();
+
+void appendArrayList(ArrayList_t *alist, uint64_t v);
+
+int inArrayList(ArrayList_t *alist, uint64_t v);
+
+void initArrayList(ArrayList_t *alist);
+
+void destroyArrayList(ArrayList_t *alist);
+
 typedef struct Item {
   void *req;
   uint64_t io;
   uint64_t compute;
   uint64_t wallclock;
   uint64_t wait;
+  ArrayList_t events;
   struct Item *next;
 } item_t;
 
@@ -25,9 +51,9 @@ typedef struct {
   int cnt;
 } requests_t;
 
-void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock, uint64_t wait);
+void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock, uint64_t wait, ArrayList_t *e);
 
-void *popRQ(requests_t *r, FILE *fp);
+void *popRQ(requests_t *r, FILE *fp, FILE *fp2);
 
 void initRQ(requests_t *r);
 

@@ -154,7 +154,7 @@ uint64_t conns = 0, reqs = 0, resps = 0, db_reqs = 0, db_resps = 0;
 uint64_t counter_per_type[7];
 requests_t logs = {NULL, NULL, 0};
 requests_t loops = {NULL, NULL, 0};
-FILE *outfile;
+FILE *outfile, *edg;
 
 static void check_cb(uv__io_cb cb) {
   if (cb == uv__server_io) {
@@ -307,7 +307,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     }
     cb_ready = uv__cputime();
     _cb_ready = uv__hrtime(UV_CLOCK_FAST);
-    pushRQ(&loops, NULL, nfds, 0, 0, 0);
+    pushRQ(&loops, NULL, nfds, 0, 0, 0, NULL);
     round_id++;
     round_it = 0;
     round_exec = 0;
@@ -439,15 +439,17 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
                 printf("cb exec_avg time (ns): %lu, inqueue_avg: %lu, io_avg: %lu, compute_avg: %lu, io: %lx\n", EX_TOTAL / NEVENTS, IQ_TOTAL / NEVENTS, total_IO / reqs, total_C / reqs, total_IO);
             EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
             outfile= fopen("/tmp/logs.txt", "w");
+            edg = fopen("/tmp/edges.txt", "w");
 
             while (!emptyRQ(&logs))
-              popRQ(&logs, outfile);
+              popRQ(&logs, outfile, edg);
 
             fclose(outfile);
+            fclose(edg);
             outfile= fopen("/tmp/loops.txt", "w");
 
             while (!emptyRQ(&loops))
-              popRQ(&loops, outfile);
+              popRQ(&loops, outfile, NULL);
 
             fclose(outfile);
         }

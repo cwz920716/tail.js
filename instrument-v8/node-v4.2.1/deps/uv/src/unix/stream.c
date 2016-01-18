@@ -62,6 +62,8 @@ static void request(uv_stream_t* stream) {
   stream->last_it = round_it;
   stream->reqId = stream->nextId;
   stream->nextId++; 
+  initArrayList(&stream->events);
+  appendArrayList(&stream->events, event_id);
   reqs++;
 }
 
@@ -87,6 +89,10 @@ void update(uv_stream_t* stream, int reqId) {
   stream->round = round_id;
   stream->atime = now;
   stream->io = (now - stream->stime) - stream->compute;
+
+  if (!inArrayList(&stream->events, event_id)) {
+    appendArrayList(&stream->events, event_id);
+  }
 }
 
 void response(uv_stream_t* stream) {
@@ -96,7 +102,8 @@ void response(uv_stream_t* stream) {
   }
 
   update(stream, stream->reqId);
-  pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq);
+  pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq, &stream->events);
+  initArrayList(&stream->events);
   total_IO += stream->io;
   total_C += stream->compute;
   stream->pending = 0;
