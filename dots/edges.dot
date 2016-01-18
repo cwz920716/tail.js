@@ -1,0 +1,5 @@
+digraph EDG {
+2->3->7[color=orange, penwidth=2]
+8->9->13[color=red, penwidth=2]
+14->15->19[color=purple, penwidth=2]
+}

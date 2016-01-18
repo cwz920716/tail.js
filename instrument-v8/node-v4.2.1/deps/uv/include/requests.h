@@ -35,6 +35,8 @@ void initArrayList(ArrayList_t *alist);
 
 void destroyArrayList(ArrayList_t *alist);
 
+void printArrayList(ArrayList_t *alist, FILE *fp);
+
 typedef struct Item {
   void *req;
   uint64_t io;

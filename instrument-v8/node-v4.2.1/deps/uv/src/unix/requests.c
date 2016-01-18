@@ -18,7 +18,7 @@ void appendArrayList(ArrayList_t *alist, uint64_t v) {
   array_t *newa = NULL;
 
   if (alist->len >= alist->max_len) {
-    newa = newArray();
+    // newa = newArray();
     if (newa == NULL)
       return;
     newa->index = alist->tail_pos->index + 1;
@@ -27,15 +27,17 @@ void appendArrayList(ArrayList_t *alist, uint64_t v) {
     alist->max_len += ALEN;
   }
   if (alist->len < alist->max_len) {
+    // printf("append %d\n", v);
     alist->tail_pos->a[alist->len % ALEN] = v;
     alist->len++;
   }
 }
 
 int inArrayList(ArrayList_t *alist, uint64_t v) {
-  uint64_t max_v = alist->tail_pos->a[alist->len % ALEN];
+  uint64_t max_v = 0;
   if (alist->len == 0)
-    return 1;
+    return 0;
+  max_v = alist->tail_pos->a[(alist->len - 1) % ALEN];
   return (v <= max_v);
 }
 
@@ -58,17 +60,32 @@ void destroyArrayList(ArrayList_t *alist) {
   initArrayList(alist);
 }
 
+void cloneArrayList(ArrayList_t *src, ArrayList_t *dst) {
+  initArrayList(dst);
+  dst->max_len = src->max_len;
+  dst->len = src->len;
+  dst->head = src->head;
+}
+
+char *colors[] = {"blue", "red", "black", "purple", "orange"};
+int color_len = 5, next_color = 0;
+
 void printArrayList(ArrayList_t *alist, FILE *fp) {
   uint64_t next = 0;
   array_t *cur = alist->head_pos;
+
+  // if (alist->len <= 1) return;
+
   while (next < alist->len && cur != NULL) {
-    fprintf(fp, "%ld ", cur->a[next % ALEN]);
+    fprintf(fp, "%ld", cur->a[next % ALEN]);
     next++;
+    if (next < alist->len)
+      fprintf(fp, "->");
     if ((next / 20) > cur->index) {
       cur = cur->next;
     }
   }
-  fprintf(fp, "\n");
+  fprintf(fp, "[color=%s, penwidth=2]\n", colors[next_color++ % color_len]);
   return;
 }
 
@@ -106,7 +123,7 @@ item_t *pop_req_queue(requests_t *r) {
 }
 
 void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock, uint64_t wait, ArrayList_t *e) {
-  if (r->cnt < 100) {
+  if (r->cnt < 0) {
     r->cnt++;
     return;
   }
@@ -120,9 +137,9 @@ void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wa
   item->compute = compute;
   item->wallclock = wallclock;
   item->wait = wait;
-  if (e != NULL)
-    item->events = *e;
-  else
+  if (e != NULL) {
+    cloneArrayList(e, &item->events);
+  } else
     initArrayList(&item->events);
   item->next = NULL;
   push_req_queue(r, item);
@@ -139,7 +156,8 @@ void *popRQ(requests_t *r, FILE *fp, FILE *fp2) {
   if (item->compute + item->io > 0)
     fprintf(fp, "%ld\t%ld\t%ld\t%f\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io), ((double) item->wait * 1.0 / item->compute), item->wait );
   if (fp2) {
-    printArrayList(fp2, &item->events);
+    // printArrayList(&item->events, stdout);
+    printArrayList(&item->events, fp2);
   }
   destroyArrayList(&item->events);
   uv__free(item);

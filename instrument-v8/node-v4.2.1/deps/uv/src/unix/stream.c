@@ -72,8 +72,8 @@ void update(uv_stream_t* stream, int reqId) {
   if (!stream->pending || reqId < stream->reqId) {
     return;
   }
-  printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
-  assert(cb_prepare < now && cb_prepare > cb_ready);
+  // printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
+  // assert(cb_prepare < now && cb_prepare > cb_ready);
   
   if (round_id != stream->round) {
     stream->compute += (now - cb_ready);
@@ -102,6 +102,7 @@ void response(uv_stream_t* stream) {
   }
 
   update(stream, stream->reqId);
+  // printArrayList(&stream->events, stdout);
   pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq, &stream->events);
   initArrayList(&stream->events);
   total_IO += stream->io;
@@ -111,13 +112,13 @@ void response(uv_stream_t* stream) {
 }
 
 int uv_new_http_request(uv_stream_t* handle) {
-  printf("%p: new HTTP at %lu\n", handle, event_id);  
+  // printf("%p: new HTTP at %lu\n", handle, event_id);  
   request(handle);
   return handle->reqId;
 }
 
 int uv_new_http_response(uv_stream_t* handle) {
-  printf("%p: finish HTTP at %lu\n", handle, event_id); 
+  // printf("%p: finish HTTP at %lu\n", handle, event_id); 
   response(handle);
   return 0;
 }
