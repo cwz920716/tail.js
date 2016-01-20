@@ -8,7 +8,7 @@ f=0
 
 $node_bin_path server.js 146.6.53.156 50000 &
 sleep 15
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R2 -t2 -c2 -d90s -s ~/dev-tools/wrk2/scripts/lighter.lua http://146.6.53.156:50000/'
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R3 -t3 -c3 -d90s -s ~/dev-tools/wrk2/scripts/lighter.lua http://146.6.53.156:50000/'
 pkill node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt

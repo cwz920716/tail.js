@@ -32,6 +32,10 @@ cd word-finder
 sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
+cd etherpad-lite
+sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+cd ..
+
 cd tools
 sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..

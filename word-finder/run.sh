@@ -1,19 +1,19 @@
 #! /bin/sh
 
-bench=lets-chat
+bench=word-finder
 cli=cwz@146.6.53.132
 node_bin_path=../instrument-v8/node-v4.2.1/node
 
 f=0
 
-$node_bin_path app.js 146.6.53.156 50000 &
+$node_bin_path server.js 146.6.53.156 50000 &
 sleep 15
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R2 -t2 -c2 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R2 -t2 -c2 -d90s -s ~/dev-tools/wrk2/scripts/word.lua http://146.6.53.156:50000/'
 pkill node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
 mv /tmp/edges.dot ./edges-$f.dot
-dot -Tpdf ./edges-$f.dot -o chat.pdf
+dot -Tpdf ./edges-$f.dot -o word.pdf
 mv /tmp/loops.txt ./loops-$f.txt
 cd ../tools
 python plot_cdf.py ../$bench/logs-$f.txt 0 'time(ns)' '' > /dev/null
