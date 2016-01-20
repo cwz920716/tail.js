@@ -48,7 +48,7 @@ static void request(uv_stream_t* stream) {
     printf("pending request\n");
     return;
   }
-  assert(cb_prepare < now && cb_prepare > cb_ready);
+  assert(cb_prepare < now && cb_prepare >= cb_ready);
 
   stream->pending = 1;
   stream->inq = stream->compute = stream->io = 0;
@@ -73,7 +73,7 @@ void update(uv_stream_t* stream, int reqId) {
     return;
   }
   // printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
-  // assert(cb_prepare < now && cb_prepare > cb_ready);
+  assert(cb_prepare < now && cb_prepare >= cb_ready);
   
   if (round_id != stream->round) {
     stream->compute += (now - cb_ready);

@@ -305,7 +305,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (nfds == -1 && errno == ENOSYS)
         no_epoll_wait = 1;
     }
-    cb_ready = uv__cputime();
+    cb_prepare = cb_ready = uv__cputime();
     _cb_ready = uv__hrtime(UV_CLOCK_FAST);
     pushRQ(&loops, NULL, nfds, 0, 0, 0, NULL);
     round_id++;
@@ -414,6 +414,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (pe->events != 0) {
         cb_prepare = uv__cputime();
         cb_inqueue = cb_prepare - cb_ready;
+        assert(cb_inqueue >= 0);
         IQ_TOTAL += cb_inqueue;
         NEVENTS++;
         event_id++;
@@ -426,7 +427,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         round_exec += cb_exec;
         EX_TOTAL += cb_exec;
         st_add_sample(cb_inqueue, cb_exec);
-        if ( (uv__hrtime(UV_CLOCK_FAST) - cb_lastp) > (uint64_t) 1e9 * 5) {
+        if ( (uv__hrtime(UV_CLOCK_FAST) - cb_lastp) > (uint64_t) 1e9 * 60) {
             printf("----------\n");
             st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
             printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);

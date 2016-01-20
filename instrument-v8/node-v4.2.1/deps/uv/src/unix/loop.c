@@ -157,7 +157,7 @@ int uv_loop_init(uv_loop_t* loop) {
   loop->wq_async.flags |= UV__HANDLE_INTERNAL;
 
   st_init();
-  /* uv_sched_setaffinity(); */
+  uv_pthread_setaffinity();
   /* uv_set_cpufreq(); */
   return 0;
 
