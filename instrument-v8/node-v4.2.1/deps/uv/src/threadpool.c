@@ -214,6 +214,7 @@ static int uv__work_cancel(uv_loop_t* loop, uv_req_t* req, struct uv__work* w) {
   return 0;
 }
 
+extern uint64_t event_id;
 
 void uv__work_done(uv_async_t* handle) {
   struct uv__work* w;
@@ -239,6 +240,7 @@ void uv__work_done(uv_async_t* handle) {
     w = container_of(q, struct uv__work, wq);
     err = (w->work == uv__cancelled) ? UV_ECANCELED : 0;
     w->done(w, err);
+    event_id++;
   }
 }
 

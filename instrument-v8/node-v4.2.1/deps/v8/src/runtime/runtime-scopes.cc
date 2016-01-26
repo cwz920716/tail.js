@@ -84,6 +84,12 @@ namespace instrument {
   int FunctionWrap::getIntFields(int index) {
     return this->intFields;
   }
+  void FunctionWrap::setUInt64Fields(int index, uint64_t value) {
+    this->uint64Fields = value;
+  }
+  uint64_t FunctionWrap::getUInt64Fields(int index) {
+    return this->uint64Fields;
+  }
 
   void FunctionWrap::MakeWeak(void) {
     persistent().SetWeak(this, WeakCallback);

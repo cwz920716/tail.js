@@ -7,8 +7,8 @@ node_bin_path=../instrument-v8/node-v4.2.1/node
 f=0
 
 $node_bin_path node_modules/ep_etherpad-lite/node/server.js 146.6.53.156 50000 &
-sleep 15
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R40 -t10 -c10 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
+sleep 20
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R1 -t1 -c1 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
 pkill node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt

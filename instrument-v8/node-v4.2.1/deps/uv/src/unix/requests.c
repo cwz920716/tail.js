@@ -145,6 +145,13 @@ void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wa
   push_req_queue(r, item);
 }
 
+double NZDivison(double a, double b) {
+  if (b != 0)
+    return (a / b);
+  else
+    return 0;
+}
+
 void *popRQ(requests_t *r, FILE *fp, FILE *fp2) {
   item_t *item = pop_req_queue(r);
   void *ret;
@@ -153,8 +160,9 @@ void *popRQ(requests_t *r, FILE *fp, FILE *fp2) {
     return NULL;
 
   ret = item->req;
-  if (item->compute + item->io > 0)
-    fprintf(fp, "%ld\t%ld\t%ld\t%f\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, ((double) item->compute * 1.0 / item->io), ((double) item->wait * 1.0 / item->compute), item->wait );
+  if (fp)
+    fprintf(fp, "%ld\t%ld\t%ld\t%f\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, 
+           NZDivison(item->compute * 1.0, item->io * 1.0), NZDivison(item->wait * 1.0, item->compute * 1.0), item->wait );
   if (fp2) {
     // printArrayList(&item->events, stdout);
     printArrayList(&item->events, fp2);

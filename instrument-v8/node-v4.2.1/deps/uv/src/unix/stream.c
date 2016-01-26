@@ -128,6 +128,10 @@ int uv_eventOf(uv_stream_t* handle, int reqId) {
   return 0;
 }
 
+uint64_t uv_eventId(void) {
+  return event_id;
+}
+
 #if defined(__APPLE__)
 # include <sys/event.h>
 # include <sys/time.h>

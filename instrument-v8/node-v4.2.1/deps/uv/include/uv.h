@@ -481,6 +481,7 @@ UV_EXTERN int uv_try_write(uv_stream_t* handle,
 UV_EXTERN int uv_new_http_request(uv_stream_t* handle);
 UV_EXTERN int uv_new_http_response(uv_stream_t* handle);
 UV_EXTERN int uv_eventOf(uv_stream_t* handle, int reqId);
+UV_EXTERN uint64_t uv_eventId(void);
 
 /* uv_write_t is a subclass of uv_req_t. */
 struct uv_write_s {

@@ -50,6 +50,7 @@
     QUEUE* q;                                                                 \
     QUEUE_FOREACH(q, &loop->name##_handles) {                                 \
       h = QUEUE_DATA(q, uv_##name##_t, queue);                                \
+      event_id++;                                                             \
       h->name##_cb(h);                                                        \
     }                                                                         \
   }                                                                           \
@@ -57,6 +58,8 @@
   void uv__##name##_close(uv_##name##_t* handle) {                            \
     uv_##name##_stop(handle);                                                 \
   }
+
+extern uint64_t event_id;
 
 UV_LOOP_WATCHER_DEFINE(prepare, PREPARE)
 UV_LOOP_WATCHER_DEFINE(check, CHECK)

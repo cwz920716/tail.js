@@ -7,7 +7,7 @@ node_bin_path=../instrument-v8/node-v4.2.1/node
 f=0
 
 $node_bin_path app.js 146.6.53.156 50000 &
-sleep 15
+sleep 30
 ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R2 -t2 -c2 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
 pkill node
 sleep 20

@@ -3,6 +3,9 @@
 #include "v8.h"
 #include <stdio.h>
 
+#include <iostream>
+#include <fstream>
+
 namespace node {
 
 using v8::HandleScope;
@@ -15,6 +18,8 @@ using v8::TryCatch;
 namespace instrument {
 
 stack<Context> ContextStack::cstack;
+using namespace std;
+ofstream out("/tmp/pedg.dot");
 
 void createFunHandler(FunctionWrap *wrap) {
   bool in = ContextStack::inContext();
@@ -23,6 +28,7 @@ void createFunHandler(FunctionWrap *wrap) {
     wrap->setBoolFields(0, true);
     wrap->setPointerFields(0, ctx._handle);
     wrap->setIntFields(0, ctx._reqId);
+    wrap->setUInt64Fields(0, uv_eventId());
   } else
     wrap->setBoolFields(0, false);
 }
@@ -33,6 +39,12 @@ void beforeCallHandler(FunctionWrap *wrap) {
     int reqId = wrap->getIntFields(0);
     Context ctx = {handle, reqId};
     ContextStack::enterContext(ctx);
+
+    uint64_t cur = uv_eventId();
+    uint64_t create = wrap->getUInt64Fields(0);
+    if (cur != create) {
+      out << create << "->" << cur << ";" << endl;
+    }
   }
 }
 

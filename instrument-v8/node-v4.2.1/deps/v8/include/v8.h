@@ -8389,6 +8389,7 @@ namespace instrument {
       int _hash;
 
       int intFields;
+      uint64_t uint64Fields;
       void *pointerFields;
       bool boolFields;
 
@@ -8415,6 +8416,8 @@ namespace instrument {
       void *getPointerFields(int index);
       void setIntFields(int index, int value);
       int getIntFields(int index);
+      void setUInt64Fields(int index, uint64_t value);
+      uint64_t getUInt64Fields(int index);
   
       void MakeWeak(void);
 
