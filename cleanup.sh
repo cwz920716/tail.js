@@ -20,9 +20,9 @@ cd nodejs-todo
 rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
-# cd lighter
-# rm -f *.txt *.cdf *.pdf *.plt *.dot
-# cd ..
+cd lighter
+rm -f *.txt *.cdf *.pdf *.plt *.dot
+cd ..
 
 cd lets-chat
 rm -f *.txt *.cdf *.pdf *.plt *.dot
