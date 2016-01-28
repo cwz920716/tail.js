@@ -163,7 +163,7 @@ void uv__run_timers(uv_loop_t* loop) {
 
     uv_timer_stop(handle);
     uv_timer_again(handle);
-    event_id++;
+    // event_id++;
     handle->timer_cb(handle);
   }
 }

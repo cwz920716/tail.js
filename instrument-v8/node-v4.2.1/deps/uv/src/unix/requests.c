@@ -123,7 +123,7 @@ item_t *pop_req_queue(requests_t *r) {
 }
 
 void pushRQ(requests_t *r, void *req, uint64_t io, uint64_t compute, uint64_t wallclock, uint64_t wait, ArrayList_t *e) {
-  if (r->cnt < 0) {
+  if (r->cnt < 100) {
     r->cnt++;
     return;
   }

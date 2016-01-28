@@ -731,7 +731,7 @@ static int uv__run_pending(uv_loop_t* loop) {
     QUEUE_REMOVE(q);
     QUEUE_INIT(q);
     w = QUEUE_DATA(q, uv__io_t, pending_queue);
-    event_id++;
+    // event_id++;
     w->cb(loop, w, UV__POLLOUT);
   }
 

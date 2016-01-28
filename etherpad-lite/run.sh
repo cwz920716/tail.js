@@ -1,15 +1,15 @@
 #! /bin/sh
 
 bench=etherpad-lite
-cli=cwz@146.6.53.132
+cli=cwz@146.6.53.187
 node_bin_path=../instrument-v8/node-v4.2.1/node
 
 f=0
 
 $node_bin_path node_modules/ep_etherpad-lite/node/server.js 146.6.53.156 50000 &
 sleep 20
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R1 -t1 -c1 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
-pkill node
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R200 -t1 -c1 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
+pkill -9 node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
 mv /tmp/edges.dot ./edges-$f.dot

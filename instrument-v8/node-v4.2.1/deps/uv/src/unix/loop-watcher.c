@@ -50,7 +50,7 @@
     QUEUE* q;                                                                 \
     QUEUE_FOREACH(q, &loop->name##_handles) {                                 \
       h = QUEUE_DATA(q, uv_##name##_t, queue);                                \
-      event_id++;                                                             \
+      /*event_id++;*/                                                             \
       h->name##_cb(h);                                                        \
     }                                                                         \
   }                                                                           \

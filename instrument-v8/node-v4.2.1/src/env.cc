@@ -19,7 +19,7 @@ namespace instrument {
 
 stack<Context> ContextStack::cstack;
 using namespace std;
-ofstream out("/tmp/pedg.dot");
+// ofstream out("/tmp/pedg.dot");
 
 void createFunHandler(FunctionWrap *wrap) {
   bool in = ContextStack::inContext();
@@ -43,7 +43,7 @@ void beforeCallHandler(FunctionWrap *wrap) {
     uint64_t cur = uv_eventId();
     uint64_t create = wrap->getUInt64Fields(0);
     if (cur != create) {
-      out << create << "->" << cur << ";" << endl;
+      // out << create << "->" << cur << ";" << endl;
     }
   }
 }
