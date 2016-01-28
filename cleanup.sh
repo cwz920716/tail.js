@@ -9,35 +9,35 @@ make clean
 cd ../..
 
 cd redis-server
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 cd nodejs-mud
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 cd nodejs-todo
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
-cd lighter
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
-cd ..
+# cd lighter
+# rm -f *.txt *.cdf *.pdf *.plt *.dot
+# cd ..
 
 cd lets-chat
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 cd word-finder
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 cd etherpad-lite
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 cd tools
-sudo rm -f *.txt *.cdf *.pdf *.plt *.dot
+rm -f *.txt *.cdf *.pdf *.plt *.dot
 cd ..
 
 for file in `find . -type f -name '*~'`

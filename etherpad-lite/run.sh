@@ -8,7 +8,7 @@ f=0
 
 $node_bin_path node_modules/ep_etherpad-lite/node/server.js 146.6.53.156 50000 &
 sleep 20
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R200 -t1 -c1 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R300 -t50 -c50 -d90s -s ~/dev-tools/wrk2/scripts/etherpad.lua http://146.6.53.156:50000/'
 pkill -9 node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
@@ -24,3 +24,4 @@ python plot_cdf.py ../$bench/logs-$f.txt 4 'time(ns)' 'fraction' > /dev/null
 python plot_cdf.py ../$bench/logs-$f.txt 5 'time(ns)' 'compute' > /dev/null
 python plot_cdf.py ../$bench/loops-$f.txt 0 'events per round' 'none' > /dev/null
 cd ../$bench
+rm -f ./var/*
