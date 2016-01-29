@@ -8,7 +8,7 @@ f=0
 
 $node_bin_path app.js 146.6.53.156 50000 &
 sleep 30
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R200 -t50 -c50 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R200 -t10 -c10 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
 pkill -9 node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
