@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define ALEN (20)
+#define ALEN (40)
 
 typedef struct ArrayType {
   uint64_t index;

@@ -38,8 +38,6 @@
 
 /* extern counters */
 extern uint64_t conns, reqs, resps, db_reqs, db_resps;
-extern uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, total_IO, total_C;
-extern uint64_t event_id, round_id, round_it, round_exec;
 extern requests_t logs;
 
 static void request(uv_stream_t* stream) {
@@ -48,22 +46,23 @@ static void request(uv_stream_t* stream) {
     printf("pending request\n");
     return;
   }
-  assert(cb_prepare < now && cb_prepare >= cb_ready);
-
+  
   stream->pending = 1;
   stream->inq = stream->compute = stream->io = 0;
-  stream->round = round_id;
-  stream->atime = now;
-  stream->stime = cb_ready; /* start time */
-  stream->_stime = _cb_ready; /* start time */
-  stream->compute += (now - cb_ready);
-  stream->inq += (cb_prepare - cb_ready);
-  stream->iter = round_it;
-  stream->last_it = round_it;
   stream->reqId = stream->nextId;
   stream->nextId++; 
   initArrayList(&stream->events);
-  appendArrayList(&stream->events, event_id);
+  appendArrayList(&stream->events, currentEvent.id);
+
+  assert(currentEvent.active);
+  stream->stime = currentEvent.loop.ts; /* start time */
+  stream->compute += (now - currentEvent.loop.ts);
+  stream->inq += currentEvent.wait_ts;
+  stream->io = (now - stream->stime) - stream->compute;
+
+  stream->atime = now;
+  stream->ei = currentEvent;
+
   reqs++;
 }
 
@@ -73,26 +72,30 @@ void update(uv_stream_t* stream, int reqId) {
     return;
   }
   // printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
-  assert(cb_prepare < now && cb_prepare >= cb_ready);
-  
-  if (round_id != stream->round) {
-    stream->compute += (now - cb_ready);
-    stream->inq += (cb_prepare - cb_ready);
-    stream->iter += round_it; 
-  } else if (round_id == stream->round) {
+  if (!currentEvent.active) return;
+
+  if (currentEvent.id == ei.id) {
     stream->compute += (now - stream->atime);
-    if (stream->last_it != round_it)
-        stream->inq += (cb_prepare - stream->atime);
-    stream->iter += (round_it - stream->last_it); 
+  } else if (currentEvent.loop.id == ei.loop.id) {
+    stream->compute += (now - stream->atime);
+    stream->inq += (currentEvent.wait_ts - ei.wait_ts);
+  } else {
+    stream->inq += currentEvent.wait_ts;
+    stream->compute += (now - currentEvent.loop.ts);
   }
-  stream->last_it = round_it;
-  stream->round = round_id;
-  stream->atime = now;
   stream->io = (now - stream->stime) - stream->compute;
+
+  stream->atime = now;
+  stream->ei = currentEvent;
 
   if (!inArrayList(&stream->events, event_id)) {
     appendArrayList(&stream->events, event_id);
   }
+}
+
+void close(uv_stream_t* stream, int reqId) {
+  uint64_t now = uv__cputime();
+  stream->io = (now - stream->stime) - stream->compute;
 }
 
 void response(uv_stream_t* stream) {
@@ -102,11 +105,10 @@ void response(uv_stream_t* stream) {
   }
 
   update(stream, stream->reqId);
+  close(stream, stream->reqId);
   // printArrayList(&stream->events, stdout);
   pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq, &stream->events);
   initArrayList(&stream->events);
-  total_IO += stream->io;
-  total_C += stream->compute;
   stream->pending = 0;
   resps++;
 }

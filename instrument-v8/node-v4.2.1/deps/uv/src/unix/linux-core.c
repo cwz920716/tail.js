@@ -22,6 +22,7 @@
 #include "internal.h"
 #include "esample.h"
 #include "requests.h"
+#include "event.h"
 #include <cpufreq.h>
 
 #include <stdint.h>
@@ -193,10 +194,41 @@ static void check_cb(uv__io_cb cb) {
  * Add some variable to profile the EVENT LOOP TIME 
  */
 uint64_t prog_start = 0, prog_inflex = 0, prog_all = 0;
-uint64_t cb_prepare, cb_ready, _cb_ready, cb_exec, cb_inqueue, cb_lastp = 0, IQ_TOTAL = 0, EX_TOTAL = 0, NEVENTS = 0, total_IO = 0, total_C = 0;
-uint64_t event_id = 0, round_id = 0, round_it = 0, round_exec = 0;
 uint64_t flex_mode = 0, freq = 0, threshold = -1;
 /* freq = 0: Low freq; freq = 1: High freq; */
+uint64_t log_ts = 0;
+
+LoopInfo_t globalLoop = {0, 0, 0};
+void LoopBarrier() {
+  globalLoop.id++;
+  globalLoop.ts = uv__cputime();
+}
+
+uint64_t nextEventId = 0;
+uint64_t getNextEventId() {
+  return nextEventId++;
+}
+
+EventInfo_t currentEvent;
+
+void EventBegins(EventInfo_t *event) {
+  event->active = 1;
+  event->id = getNextEventId();
+  event->loop = globalLoop;
+  event->start_ts = uv__cputime();
+  event->end_ts = 0;
+  event->wait_ts = event->start_ts - event->loop.ts;
+}
+
+void EventEnds(EventInfo_t *event) {
+  event->active = 0;
+  event->end_ts = uv__cputime();
+  event->exec_ts = event->end_ts - event->start_ts;
+}
+
+uint64_t EventActive(EventInfo_t *event) {
+  return (event->active);
+}
 
 void uv__io_poll(uv_loop_t* loop, int timeout) {
   /* A bug in kernels < 2.6.37 makes timeouts larger than ~30 minutes
@@ -305,12 +337,8 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       if (nfds == -1 && errno == ENOSYS)
         no_epoll_wait = 1;
     }
-    cb_prepare = cb_ready = uv__cputime();
-    _cb_ready = uv__hrtime(UV_CLOCK_FAST);
-    pushRQ(&loops, NULL, nfds, 0, 0, 0, NULL);
-    round_id++;
-    round_it = 0;
-    round_exec = 0;
+    /* pushRQ(&loops, NULL, nfds, 0, 0, 0, NULL); */
+    LoopBarrier();
     if (flex_mode) {
       if (nfds >= threshold) {
         cpufreq_set_frequency(0, 3200000);
@@ -412,47 +440,32 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         pe->events |= w->pevents & (UV__EPOLLIN | UV__EPOLLOUT);
 
       if (pe->events != 0) {
-        cb_prepare = uv__cputime();
-        cb_inqueue = cb_prepare - cb_ready;
-        assert(cb_inqueue >= 0);
-        IQ_TOTAL += cb_inqueue;
-        NEVENTS++;
-        event_id++;
+        EventBegins(&currentEvent);
         w->cb(loop, w, pe->events);
-        round_it++; 
+        EventEnds(&currentEvent);
         check_cb(w->cb);
-        cb_exec = uv__cputime() - cb_prepare;
         if (freq == 1 && flex_mode)
             prog_inflex += cb_exec;
-        round_exec += cb_exec;
-        EX_TOTAL += cb_exec;
-        st_add_sample(cb_inqueue, cb_exec);
-        if ( (uv__hrtime(UV_CLOCK_FAST) - cb_lastp) > (uint64_t) 1e9 * 60) {
+        if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 60) {
             printf("----------\n");
-            st_get_percentile(500); st_get_percentile(900); st_get_percentile(990); st_get_percentile(999);
-            printf("conns = %ld, reqs = %ld, resps = %ld, db_reqs = %ld, db_resps = %ld\n", conns, reqs, resps, db_reqs, db_resps);
-            prog_all = uv__cputime() - prog_start;
+            printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
+            // prog_all = uv__cputime() - prog_start;
             printf("flex/all=%lu/%lu\n", prog_inflex, prog_all);
-            cb_lastp = uv__hrtime(UV_CLOCK_FAST);
-            st_clean();
-            printf("\n"); 
-            if (reqs != 0)
-                printf("cb exec_avg time (ns): %lu, inqueue_avg: %lu, io_avg: %lu, compute_avg: %lu, io: %lx\n", EX_TOTAL / NEVENTS, IQ_TOTAL / NEVENTS, total_IO / reqs, total_C / reqs, total_IO);
-            EX_TOTAL = IQ_TOTAL = NEVENTS = 0;
-            outfile= fopen("/tmp/logs.txt", "w");
-            edg = fopen("/tmp/edges.dot", "w"); fprintf(edg, "digraph EDG {\n");
+            log_ts = uv__hrtime(UV_CLOCK_FAST);
 
+            outfile= fopen("/tmp/logs.txt", "w");
+            edg = fopen("/tmp/edges.dot", "w"); 
+            fprintf(edg, "digraph EDG {\n");
             while (!emptyRQ(&logs))
               popRQ(&logs, outfile, edg);
-
             fclose(outfile);
-            fprintf(edg, "}\n"); fclose(edg);
-            outfile= fopen("/tmp/loops.txt", "w");
+            fprintf(edg, "}\n"); 
+            fclose(edg);
 
+/*            outfile= fopen("/tmp/loops.txt", "w");
             while (!emptyRQ(&loops))
               popRQ(&loops, outfile, NULL);
-
-            fclose(outfile);
+            fclose(outfile); */
         }
         nevents++;
       }
