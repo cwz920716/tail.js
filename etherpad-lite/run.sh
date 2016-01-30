@@ -14,7 +14,7 @@ sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
 mv /tmp/edges.dot ./edges-$f.dot
 # dot -Tpdf ./edges-$f.dot -o etherpad.pdf
-mv /tmp/loops.txt ./loops-$f.txt
+# mv /tmp/loops.txt ./loops-$f.txt
 cd ../tools
 python plot_cdf.py ../$bench/logs-$f.txt 0 'time(ns)' '' > /dev/null
 python plot_cdf.py ../$bench/logs-$f.txt 1 'time(ns)' 'non-IO' > /dev/null

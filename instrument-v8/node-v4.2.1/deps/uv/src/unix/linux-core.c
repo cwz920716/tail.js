@@ -198,7 +198,7 @@ uint64_t flex_mode = 0, freq = 0, threshold = -1;
 /* freq = 0: Low freq; freq = 1: High freq; */
 uint64_t log_ts = 0;
 
-LoopInfo_t globalLoop = {0, 0, 0};
+LoopInfo_t globalLoop = {0, 0};
 void LoopBarrier() {
   globalLoop.id++;
   globalLoop.ts = uv__cputime();
@@ -445,7 +445,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         EventEnds(&currentEvent);
         check_cb(w->cb);
         if (freq == 1 && flex_mode)
-            prog_inflex += cb_exec;
+            prog_inflex += currentEvent.exec_ts;
         if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 60) {
             printf("----------\n");
             printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);

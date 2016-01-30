@@ -74,11 +74,11 @@ void update(uv_stream_t* stream, int reqId) {
   // printf("%p, %d: event acts at %lu\n", stream, reqId, event_id);
   if (!currentEvent.active) return;
 
-  if (currentEvent.id == ei.id) {
+  if (currentEvent.id == stream->ei.id) {
     stream->compute += (now - stream->atime);
-  } else if (currentEvent.loop.id == ei.loop.id) {
+  } else if (currentEvent.loop.id == stream->ei.loop.id) {
     stream->compute += (now - stream->atime);
-    stream->inq += (currentEvent.wait_ts - ei.wait_ts);
+    stream->inq += (currentEvent.wait_ts - stream->ei.wait_ts);
   } else {
     stream->inq += currentEvent.wait_ts;
     stream->compute += (now - currentEvent.loop.ts);
@@ -88,12 +88,12 @@ void update(uv_stream_t* stream, int reqId) {
   stream->atime = now;
   stream->ei = currentEvent;
 
-  if (!inArrayList(&stream->events, event_id)) {
-    appendArrayList(&stream->events, event_id);
+  if (!inArrayList(&stream->events, currentEvent.id)) {
+    appendArrayList(&stream->events, currentEvent.id);
   }
 }
 
-void close(uv_stream_t* stream, int reqId) {
+void request_close(uv_stream_t* stream, int reqId) {
   uint64_t now = uv__cputime();
   stream->io = (now - stream->stime) - stream->compute;
 }
@@ -105,9 +105,9 @@ void response(uv_stream_t* stream) {
   }
 
   update(stream, stream->reqId);
-  close(stream, stream->reqId);
+  request_close(stream, stream->reqId);
   // printArrayList(&stream->events, stdout);
-  pushRQ(&logs, NULL, stream->io, stream->compute, stream->iter, stream->inq, &stream->events);
+  pushRQ(&logs, NULL, stream->io, stream->compute, 0, stream->inq, &stream->events);
   initArrayList(&stream->events);
   stream->pending = 0;
   resps++;
@@ -131,7 +131,7 @@ int uv_eventOf(uv_stream_t* handle, int reqId) {
 }
 
 uint64_t uv_eventId(void) {
-  return event_id;
+  return currentEvent.id;
 }
 
 #if defined(__APPLE__)

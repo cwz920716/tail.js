@@ -712,7 +712,6 @@ int uv_fileno(const uv_handle_t* handle, uv_os_fd_t* fd) {
   return 0;
 }
 
-extern uint64_t event_id;
 
 static int uv__run_pending(uv_loop_t* loop) {
   QUEUE* q;
@@ -731,7 +730,6 @@ static int uv__run_pending(uv_loop_t* loop) {
     QUEUE_REMOVE(q);
     QUEUE_INIT(q);
     w = QUEUE_DATA(q, uv__io_t, pending_queue);
-    // event_id++;
     w->cb(loop, w, UV__POLLOUT);
   }
 
