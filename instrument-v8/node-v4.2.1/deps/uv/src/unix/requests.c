@@ -149,7 +149,7 @@ double NZDivison(double a, double b) {
   if (b != 0)
     return (a / b);
   else
-    return 0;
+    return 1.0;
 }
 
 void *popRQ(requests_t *r, FILE *fp, FILE *fp2) {
@@ -161,7 +161,7 @@ void *popRQ(requests_t *r, FILE *fp, FILE *fp2) {
 
   ret = item->req;
   if (fp)
-    fprintf(fp, "%ld\t%ld\t%ld\t%f\t%f\t%ld\n", (item->compute + item->io), item->compute, item->io, 
+    fprintf(fp, "%ld,%ld,%ld,%f,%f,%ld\n", (item->compute + item->io), item->compute, item->io, 
            NZDivison(item->compute * 1.0, item->io * 1.0), NZDivison(item->wait * 1.0, item->compute * 1.0), item->wait );
   if (fp2) {
     // printArrayList(&item->events, stdout);

@@ -22,7 +22,7 @@ for lines in file:
 		continue
 	# print lines
 	linecnt = linecnt + 1
-	tuples = lines.split()
+	tuples = lines.split(',')
 	if len(tuples) < index:
 		index = len(tuples) - 1
 	datapoints.append(float(tuples[index]))

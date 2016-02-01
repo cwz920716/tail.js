@@ -625,6 +625,8 @@ public:
       return;
 
     // printf("exitC\n");
+    Context ctx = cstack.top();
+    uv_eventOf(ctx._handle, ctx._reqId);
     cstack.pop();
     // delete top;
   }

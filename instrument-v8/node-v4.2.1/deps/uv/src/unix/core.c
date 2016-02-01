@@ -329,16 +329,22 @@ int uv_run(uv_loop_t* loop, uv_run_mode mode) {
 
   while (r != 0 && loop->stop_flag == 0) {
     uv__update_time(loop);
+    LoopBarrier();
     uv__run_timers(loop);
+    LoopBarrier();
     ran_pending = uv__run_pending(loop);
+    LoopBarrier();
     uv__run_idle(loop);
+    LoopBarrier();
     uv__run_prepare(loop);
 
     timeout = 0;
     if ((mode == UV_RUN_ONCE && !ran_pending) || mode == UV_RUN_DEFAULT)
       timeout = uv_backend_timeout(loop);
 
+    LoopBarrier();
     uv__io_poll(loop, timeout);
+    LoopBarrier();
     uv__run_check(loop);
     uv__run_closing_handles(loop);
 
@@ -352,6 +358,7 @@ int uv_run(uv_loop_t* loop, uv_run_mode mode) {
        * the check.
        */
       uv__update_time(loop);
+      LoopBarrier();
       uv__run_timers(loop);
     }
 

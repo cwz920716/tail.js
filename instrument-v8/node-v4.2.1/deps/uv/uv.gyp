@@ -128,6 +128,7 @@
             'include/uv-unix.h',
             'include/uv-linux.h',
             'include/requests.h',
+            'include/event.h',
             'include/uv-sunos.h',
             'include/uv-darwin.h',
             'include/uv-bsd.h',

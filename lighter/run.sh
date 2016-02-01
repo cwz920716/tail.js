@@ -1,14 +1,14 @@
 #! /bin/sh
 
 bench=lighter
-cli=cwz@146.6.53.187
+cli=cwz@146.6.53.154
 node_bin_path=../instrument-v8/node-v4.2.1/node
 
 f=0
 
 $node_bin_path server.js 146.6.53.156 50000 &
-sleep 10
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R400 -t20 -c20 -d90s -s ~/dev-tools/wrk2/scripts/lighter.lua http://146.6.53.156:50000/'
+sleep 20
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R600 -t100 -c100 -d90s -s ~/dev-tools/wrk2/scripts/lighter.lua http://146.6.53.156:50000/'
 # ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R400 -t50 -c50 -d90s http://146.6.53.156:50000/styles/styles.css'
 pkill -9 node
 sleep 10
@@ -16,6 +16,7 @@ mv /tmp/logs.txt ./logs-$f.txt
 mv /tmp/edges.dot ./edges-$f.dot
 #dot -Tpdf ./edges-$f.dot -o lighter.pdf
 # mv /tmp/loops.txt ./loops-$f.txt
+cat ./logs-$f.txt | sort -g -k 1 -t"," > ./logs-$f.csv
 cd ../tools
 python plot_cdf.py ../$bench/logs-$f.txt 0 'time(ns)' '' > /dev/null
 python plot_cdf.py ../$bench/logs-$f.txt 1 'time(ns)' 'non-IO' > /dev/null

@@ -446,7 +446,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         check_cb(w->cb);
         if (freq == 1 && flex_mode)
             prog_inflex += currentEvent.exec_ts;
-        if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 60) {
+        if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 80) {
             printf("----------\n");
             printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
             // prog_all = uv__cputime() - prog_start;
