@@ -8,7 +8,7 @@ f=0
 
 $node_bin_path app.js 146.6.53.156 50000 &
 sleep 20
-ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R40 -t20 -c20 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
+ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R100 -t25 -c25 -d90s -s ~/dev-tools/wrk2/scripts/chat.lua http://146.6.53.156:50000/'
 pkill -9 node
 sleep 20
 mv /tmp/logs.txt ./logs-$f.txt
@@ -26,3 +26,4 @@ python plot_cdf.py ../$bench/logs-$f.txt 5 'time(ns)' 'compute' > /dev/null
 cd ../$bench
 mongo letschat --eval "db.dropDatabase();"
 npm run migrate
+echo 3 | sudo tee /proc/sys/vm/drop_caches

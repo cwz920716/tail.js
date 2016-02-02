@@ -221,6 +221,8 @@ void EventBegins(EventInfo_t *event) {
 }
 
 void EventEnds(EventInfo_t *event) {
+  if (!event->active) return;
+
   event->active = 0;
   event->end_ts = uv__cputime();
   event->exec_ts = event->end_ts - event->start_ts;
@@ -446,7 +448,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         check_cb(w->cb);
         if (freq == 1 && flex_mode)
             prog_inflex += currentEvent.exec_ts;
-        if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 80) {
+        if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 80 * 1) {
             printf("----------\n");
             printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
             // prog_all = uv__cputime() - prog_start;

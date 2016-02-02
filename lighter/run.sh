@@ -9,7 +9,6 @@ f=0
 $node_bin_path server.js 146.6.53.156 50000 &
 sleep 20
 ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R600 -t100 -c100 -d90s -s ~/dev-tools/wrk2/scripts/lighter.lua http://146.6.53.156:50000/'
-# ssh -p 2002 $cli '~/dev-tools/wrk2/wrk -R400 -t50 -c50 -d90s http://146.6.53.156:50000/styles/styles.css'
 pkill -9 node
 sleep 10
 mv /tmp/logs.txt ./logs-$f.txt
@@ -26,3 +25,4 @@ python plot_cdf.py ../$bench/logs-$f.txt 4 'time(ns)' 'fraction' > /dev/null
 python plot_cdf.py ../$bench/logs-$f.txt 5 'time(ns)' 'compute' > /dev/null
 # python plot_cdf.py ../$bench/loops-$f.txt 0 'events per round' 'none' > /dev/null
 cd ../$bench
+echo 3 | sudo tee /proc/sys/vm/drop_caches
