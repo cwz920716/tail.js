@@ -160,7 +160,7 @@
             'src/unix/udp.c',
           ],
           'link_settings': {
-            'libraries': [ '-lm', '-lcpufreq' ],
+            'libraries': [ '-lm' ],
             'conditions': [
               ['OS=="solaris"', {
                 'ldflags': [ '-pthreads' ],

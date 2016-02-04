@@ -23,7 +23,6 @@
 #include "esample.h"
 #include "requests.h"
 #include "event.h"
-#include <cpufreq.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -193,9 +192,6 @@ static void check_cb(uv__io_cb cb) {
 /* Author: Wenzhi
  * Add some variable to profile the EVENT LOOP TIME 
  */
-uint64_t prog_start = 0, prog_inflex = 0, prog_all = 0;
-uint64_t flex_mode = 0, freq = 0, threshold = -1;
-/* freq = 0: Low freq; freq = 1: High freq; */
 uint64_t log_ts = 0;
 
 LoopInfo_t globalLoop = {0, 0};
@@ -341,12 +337,6 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     }
     /* pushRQ(&loops, NULL, nfds, 0, 0, 0, NULL); */
     LoopBarrier();
-    if (flex_mode) {
-      if (nfds >= threshold) {
-        cpufreq_set_frequency(0, 3200000);
-        freq = 1;
-      }
-    }
 
     if (sigmask != 0 && no_epoll_pwait != 0)
       if (pthread_sigmask(SIG_UNBLOCK, &sigset, NULL))
@@ -446,13 +436,10 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
         w->cb(loop, w, pe->events);
         EventEnds(&currentEvent);
         check_cb(w->cb);
-        if (freq == 1 && flex_mode)
-            prog_inflex += currentEvent.exec_ts;
         if ( (uv__hrtime(UV_CLOCK_FAST) - log_ts) > (uint64_t) 1e9 * 80 * 1) {
             printf("----------\n");
             printf("conns = %ld, reqs = %ld, resps = %ld\n", conns, reqs, resps);
             // prog_all = uv__cputime() - prog_start;
-            printf("flex/all=%lu/%lu\n", prog_inflex, prog_all);
             log_ts = uv__hrtime(UV_CLOCK_FAST);
 
             outfile= fopen("/tmp/logs.txt", "w");
@@ -470,12 +457,6 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
             fclose(outfile); */
         }
         nevents++;
-      }
-    }
-    if (flex_mode) {
-      if (freq == 1) {
-        cpufreq_set_frequency(0, 1200000);
-        freq = 0;
       }
     }
     loop->watchers[loop->nwatchers] = NULL;

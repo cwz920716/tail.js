@@ -1,4 +1,4 @@
-var HOST = '146.6.53.156';
+var HOST = '146.6.177.25';
 var PORT = 50000;
 
 var GRID_SIZE = 10;

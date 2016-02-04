@@ -28,7 +28,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <cpufreq.h>
 
 static void uv_pthread_setaffinity (void) {
   int s, j = 3;
@@ -60,8 +59,7 @@ static void uv_sched_setaffinity (void) {
   return;
 }
 
-extern uint64_t prog_start;
-extern uint64_t flex_mode, freq, threshold;
+/*
 void uv_set_cpufreq(void) {
   int s = 0, cpu = 0, skip = 0;
   uint64_t cpu_cur = 0;
@@ -69,7 +67,7 @@ void uv_set_cpufreq(void) {
   char *freq_str = NULL;
 
   freq_str = getenv("NODE_CPU0_FREQ");
-  /* printf("%s ", freq_str); */
+  printf("%s ", freq_str);
   if (freq_str) {
     cpu_togo = atol(freq_str);
     flex_mode = 0;
@@ -78,10 +76,10 @@ void uv_set_cpufreq(void) {
       flex_mode = 1;
       freq = 0;
       threshold = atoi(getenv("NODE_QUEUE_THRESHOLD"));
-      /* printf("FLEX MODE: threshold = %lu\n", threshold); */
+      printf("FLEX MODE: threshold = %lu\n", threshold);
     } else if (cpu_togo < 0) {
       skip = 1;
-      /* printf("SKIP MODE "); */
+      printf("SKIP MODE "); 
     }
   } else
     cpu_togo = 3200000;
@@ -96,6 +94,7 @@ void uv_set_cpufreq(void) {
   printf("Current CPU Frequency: %luKHz\n", cpu_cur);
   
 }
+*/
 
 int uv_loop_init(uv_loop_t* loop) {
   int err;
@@ -157,8 +156,7 @@ int uv_loop_init(uv_loop_t* loop) {
   loop->wq_async.flags |= UV__HANDLE_INTERNAL;
 
   st_init();
-  uv_pthread_setaffinity();
-  /* uv_set_cpufreq(); */
+  // uv_pthread_setaffinity();
   return 0;
 
 fail_async_init:
